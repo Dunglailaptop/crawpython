@@ -1,0 +1,80 @@
+Siêu âm,5555,Bụng,,Nam & Nữ,hoang.vud,05/11/2020,8
+Siêu âm,1BT,1_BT,,Nam & Nữ,tuan.tranm,10/09/2020,3
+MRI,MRI CE(+),MRI SỌ NÃO CÓ CHẤT TƯƠNG PHẢN TỪ,Chụp cộng hưởng từ sọ não có tiêm chất tương phản (0.2-1.5T),Nam & Nữ,dat.tranq,27/03/2023,0
+MRI,NDM,Nang ống mật chủ,"Chụp cộng hưởng từ tầng bụng không tiêm chất tương phản (gồm: chụp cộng hưởng từ gan-mật, tụy, lách, thận, dạ dày-tá tràng...) (0.2-1.5T)",Nam & Nữ,dat.tranq,21/08/2023,0
+Siêu âm,Ghép gan- Xơ Gan,Doppler mạch máu hệ mạch cửa /Ghép gan- xơ gan,Siêu âm Doppler mạch máu hệ tĩnh mạch cửa hoặc mạch máu ổ bụng,Nam & Nữ,dat.tranq,06/04/2023,1
+Siêu âm,NCG,Người cho gan,Siêu âm Doppler mạch máu hệ tĩnh mạch cửa hoặc mạch máu ổ bụng,Nam & Nữ,dat.tranq,26/05/2023,12
+Nội soi,VDD,NỘI SOI DẠ DÀY TÁ TRÀNG SINH THIẾT,"Nội soi thực quản, dạ dày, tá tràng có thể kết hợp sinh thiết",Nam & Nữ,loan.nguyenth,02/06/2022,2
+Nội soi,CATPOLYP,POLYP ĐẠI TRÀNG,Nội soi can thiệp - cắt polyp ống tiêu hóa > 1cm hoặc nhiều polyp,Nam & Nữ,phap.hoq,16/01/2024,0
+Nội soi,NSĐT2,VIÊM LOÉT ĐẠI TRÀNG,Nội soi đại trực tràng toàn bộ ống mềm có sinh thiết,Nam & Nữ,phap.hoq,15/01/2024,0
+Nội soi,NTQ,NONG THỰC QUẢN,"Nội soi thực quản, dạ dày, tá tràng có thể kết hợp sinh thiết",Nam & Nữ,phap.hoq,16/01/2024,0
+Nội soi,,Nội Soi Thanh Quản,Nội soi thanh quản ống mềm chẩn đoán,Nam & Nữ,huy.tranq,26/04/2022,0
+X Quang,RCH,BỤNG KCB,,Nam & Nữ,tho.huynhv,20/05/2022,0
+X Quang,HMT,HMT,,Nam & Nữ,tho.huynhv,13/07/2022,0
+X Quang,SXH,SOT XUAT HUYET,,Nam & Nữ,tho.huynhv,12/08/2022,0
+X Quang,VP,XQ PHỔI (VP),,Nam & Nữ,bang.maitl,03/10/2020,0
+X Quang,XQBT,XQUANG XƯƠNG BÌNH THƯỜNG,,Nam & Nữ,dat.tranq,24/08/2023,0
+X Quang,KTX,XƯƠNG SAU ĐIỀU TRỊ,,Nam & Nữ,dat.tranq,29/01/2023,0
+X Quang,VFQP,XQ PHỔI (VFQP),,Nam & Nữ,admin,23/04/2020,1
+X Quang,VPQ,XQ PHỔI (VPQ),,Nam & Nữ,bang.maitl,03/10/2020,2
+X Quang,VTPQ,X QUANG PHỔI (VTFQ),,Nam & Nữ,admin,23/04/2020,3
+X Quang,VTPQBN,XQ PHỔI (VTPQBN),,Nam & Nữ,admin,23/04/2020,4
+X Quang,SUYEN BN,XQ PHỔI (SUYEN BN),,Nam & Nữ,admin,23/04/2020,5
+X Quang,VP-TBS,XQ PHỔI (TBS),,Nam & Nữ,admin,23/04/2020,6
+X Quang,PHOI BT,PHỔI BÌNH THƯỜNG,,Nam & Nữ,admin,23/04/2020,7
+X Quang,KUB,BỤNG KHÔNG CHUẨN BỊ,,Nam & Nữ,admin,23/04/2020,8
+X Quang,XUONG,XQ XƯƠNG,,Nam & Nữ,bang.maitl,03/10/2020,9
+X Quang,UIV,UIV,,Nam & Nữ,bang.maitl,03/10/2020,10
+X Quang,VCUG,VCUG,,Nam & Nữ,bang.maitl,03/10/2020,11
+X Quang,TOGD,TOGD,,Nam & Nữ,bang.maitl,03/10/2020,12
+X Quang,LAVEMENT,ĐẠI TRÀNG CẢN QUANG,,Nam & Nữ,bang.maitl,03/10/2020,14
+X Quang,TX,TUỔI XƯƠNG,,Nam & Nữ,bang.maitl,03/10/2020,17
+X Quang,CS,X QUANG CỘT SỐNG,,Nam & Nữ,bang.maitl,03/10/2020,19
+X Quang,B-H,BLONDEAU- HIRHZ (XOANG),,Nam & Nữ,admin,23/04/2020,30
+CT,SO(BT),CT SỌ(-),,Nam & Nữ,admin,23/04/2020,0
+CT,TGG,TRUOC GHEP GAN,,Nam & Nữ,tho.huynhv,17/05/2022,0
+CT,SO(-)NUT,CT SỌ NÃO KHÔNGTIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,1
+CT,UNAO,CT SỌ KHÔNG TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,2
+CT,SO(CQ),CT SỌ NẠO CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,3
+CT,SO(MTNMC),CT SỌ NẠO KHÔNG TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,4
+CT,SO(MTDMC),CT SỌ NẠO KHÔNG TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,5
+CT,NGUCCQ,CT NGỰC CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,6
+CT,NGUCKCQ,CT NGỰC KHÔNG TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,7
+CT,UGAN,CT BỤNG CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,bang.maitl,03/10/2020,8
+CT,UNBTK,CT BỤNG CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,9
+CT,BUNGCQ,CT BỤNG CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,10
+CT,UTHAN,CT BỤNG CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,11
+CT,UBTRUNG,CT BỤNG CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,12
+CT,UGAN,CT BỤNG(+),,Nam & Nữ,admin,23/04/2020,13
+CT,BUNGKCQ,CT BỤNG KHÔNG TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,14
+CT,CTXOANG,CT XOANG,,Nam & Nữ,admin,23/04/2020,15
+CT,PMEMCQ,CT PHẦN MỀM CÓ TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,16
+CT,PMKCQ,CT PHẦN MỀM KHÔNG TIÊM THUỐC CẢN QUANG,,Nam & Nữ,admin,23/04/2020,17
+CT,CS(+),CT CỘT SỐNG CÓ CẢN QUANG,,Nam & Nữ,admin,23/04/2020,18
+CT,CS,CT CỘT SỐNG,,Nam & Nữ,admin,23/04/2020,19
+CT,CT BODY,CT BODY(+),,Nam & Nữ,bang.maitl,01/10/2020,20
+Điện não,M1,EEG GIẤC NGỦ- Bình thường- trẻ lớn,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M2,EEG GIẤC NGỦ- Bình thường- trẻ nhỏ,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M10,EEG LÚC NGỦ- BURST-SUPPRESSION,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M7,EEG LÚC NGỦ- ĐỘNG KINH CỤC BỘ,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M5,EEG LÚC NGỦ- ĐỘNG KINH TOÀN THỂ,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M9,EEG LÚC NGỦ- HC WEST,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M3,EEG LÚC THỨC- BÌNH THƯỜNG- trẻ lớn,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M6,EEG LÚC THỨC- ĐỘNG KINH CỤC BỘ,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M4,EEG LÚC THỨC - ĐỘNG KINH TOÀN THỂ,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M8,EEG LÚC THỨC- ĐỘNG KINH TOÀN THỂ CƠN VẮNG,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M11,EEG trẻ sơ sinh,,Nam & Nữ,hoang.vud,27/05/2022,0
+Điện não,M12,EEG trẻ sơ sinh – ĐỘNG KINH CỤC BỘ ĐA Ổ,,Nam & Nữ,hoang.vud,27/05/2022,0
+Nội soi,TMH,Tai - Mũi - Họng,,Nam & Nữ,admin,22/06/2020,0
+Nội soi,NSDD02,Noi soi dạ dày,,Nam & Nữ,khoa.voh,10/08/2022,1
+Nội soi,VDD13,PHIẾU KẾT QUẢ NỘI SOI DẠ DÀY TÁ TRÀNG,,Nam & Nữ,tuan.tranm,20/01/2021,1
+Nội soi,NCHP01,NGHIÊN CỨU HP,,Nam & Nữ,tuan.tranm,19/01/2021,2
+Nội soi,NSĐT02,Nội soi đại tràng,,Nam & Nữ,khoa.voh,26/04/2022,2
+Nội soi,NCHP,NGHIÊN CỨU HP,,Nam & Nữ,tuan.tranm,19/01/2021,3
+Nội soi,NSTT02,Nội soi thắt thun,,Nam & Nữ,khoa.voh,26/04/2022,3
+Nội soi,VDD04,NỘI SOI DẠ DÀY,,Nam & Nữ,tuan.tranm,19/01/2021,4
+Nội soi,ERCP02,Nội soi mật tụy ngược dòng,,Nam & Nữ,khoa.voh,12/05/2022,4
+Nội soi,VDD03,NỘI SOI DẠ DÀY,,Nam & Nữ,tuan.tranm,19/01/2021,5
+Nội soi,VDD08,NỘI SOI DẠ DÀY TÁ TRÀNG,,Nam & Nữ,tuan.tranm,19/01/2021,6
+Nội soi,VDD15,NỘI SOI DẠ DÀY TÁ TRÀNG,,Nam & Nữ,tuan.tranm,19/01/2021,7
+Nội soi,NGHIENCUU,NỘI SOI DẠ DÀY TÁ TRÀNG,,Nam & Nữ,tuan.tranm,19/01/2021,8
