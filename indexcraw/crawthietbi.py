@@ -44,7 +44,7 @@ save.click()
 # Chờ một lúc để xem kết quả
 time.sleep(3)
 
-driver.get("http://192.168.0.65:8180/#menu=56&action=110")
+driver.get("http://192.168.0.65:8180/#menu=58&action=180")
 
 time.sleep(2)
 
