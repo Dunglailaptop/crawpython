@@ -9,7 +9,25 @@ import pandas as pd
 import time
 import csv
 import json
+import os
+import unicodedata
+import re
 
+def remove_vietnamese_accents(text):
+    # Chuyển đổi chuỗi thành dạng chuẩn NFD (Normalization Form D)
+    normalized_text = unicodedata.normalize('NFD', text)
+    # Loại bỏ các ký tự dấu (accent)
+    without_accents = ''.join(c for c in normalized_text if unicodedata.category(c) != 'Mn')
+    return without_accents
+
+def remove_spaces(text):
+    # Loại bỏ khoảng cách
+    return re.sub(r'\s+', '', text)
+
+def process_text(text):
+    text_without_accents = remove_vietnamese_accents(text)
+    text_without_spaces = remove_spaces(text_without_accents)
+    return text_without_spaces
     
 # Đường dẫn tới chromedriver
 chromedriver_path = "chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
@@ -44,7 +62,7 @@ save.click()
 # Chờ một lúc để xem kết quả
 time.sleep(3)
 
-driver.get("http://192.168.0.65:8180/#menu=58&action=180")
+driver.get("http://192.168.0.65:8180/#menu=332&action=600")
 
 time.sleep(2)
 
@@ -63,7 +81,7 @@ for row in rows2:
     
     for col in col4:
         print(col.text)
-        data_header.append(col.text)
+        data_header.append(process_text(col.text))
 
 print(data_header)
 # Tìm thẻ div với id là 'listbody'
@@ -73,8 +91,21 @@ listbody_div = driver.find_element(By.ID, 'lstMain-body')
 table = listbody_div.find_element(By.TAG_NAME, 'table')
 
 object_array = []
+#chỉ định đường dẫn
+# Chỉ định đường dẫn nơi các tệp sẽ được tạo ra
+output_directory = "d:/USER DATA/Documents/nd2developer/DataText/DataNhapTest"
+csv_filename = "MaSanPhamISBT.csv"
+json_filename = "MaSanPhamISBT.json"
+
+# Tạo thư mục nếu nó chưa tồn tại
+if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
+
+# Đường dẫn đầy đủ đến các tệp
+csv_file_path = os.path.join(output_directory, csv_filename)
+json_file_path = os.path.join(output_directory, json_filename)
 # Open the CSV file to write data
-with open('dataLuotSuIn.csv', 'w', newline='', encoding='utf-8') as csvfile:
+with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
     csvwriter = csv.writer(csvfile)
     # Giả sử 'tbodys' là danh sách các phần tử tbody lấy từ trang web
     # Tìm tất cả các thẻ tbody trong table
@@ -117,7 +148,7 @@ with open('dataLuotSuIn.csv', 'w', newline='', encoding='utf-8') as csvfile:
   
 
 object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_Array_all]
-with open('dataJsonLuotSuIn.json', 'w', encoding='utf-8') as json_file:
+with open(json_file_path, 'w', encoding='utf-8') as json_file:
     json.dump(object_array, json_file, ensure_ascii=False, indent=4)      
 
 time.sleep(10)
