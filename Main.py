@@ -11,8 +11,8 @@ def main():
     model = Model()
     view = View(root)
     presenter = Presenter(model, view)
-    
     root.mainloop()
+    
 
 if __name__ == "__main__":
     main()
