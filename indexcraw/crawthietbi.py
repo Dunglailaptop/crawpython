@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 import pandas as pd
 import time
@@ -31,10 +32,15 @@ def process_text(text):
     
 # Đường dẫn tới chromedriver
 chromedriver_path = "chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
+# Cấu hình tùy chọn cho Chrome
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
+chrome_options.add_argument("--disable-gpu")  # Tùy chọn này dành cho Windows
+chrome_options.add_argument("--no-sandbox")  # Tùy chọn này dành cho Linux
 
 # Khởi tạo ChromeDriver
 service = Service(chromedriver_path)
-driver = webdriver.Chrome(service=service)
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Mở trang web
 driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
@@ -136,6 +142,7 @@ with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
                 # Sử dụng WebDriverWait để đợi phần tử có thể truy cập
                 text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
                 data_row.append(text)
+                print(text + "\n")
             except Exception as e:
                 print(f"Error accessing column: {e}")
                 data_row.append("")
