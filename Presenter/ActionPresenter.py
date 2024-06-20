@@ -6,6 +6,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 import time
 import csv
 import json
@@ -16,16 +17,8 @@ import json
 import os
 import unicodedata
 import re
-# Đường dẫn tới chromedriver
-chromedriver_path = "indexcraw/chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
 
-# Khởi tạo ChromeDriver
-service = Service(chromedriver_path)
-driver = webdriver.Chrome(service=service)
-
-# Mở trang web
-driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
-driver.maximize_window()
+# driver.maximize_window()
 
 class Presenter:
     def __init__(self, model, view):
@@ -63,9 +56,26 @@ class Presenter:
         data = self.model.get_data()
         self.view.show_message(f"Bạn đã nhập: {data}")
     #Ham login
-    def ActionLogin():
+    def ActionLogin(self):
        
+        # Đường dẫn tới chromedriver
+        chromedriver_path = "indexcraw/chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
+        # Cấu hình tùy chọn cho Chrome
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
+        chrome_options.add_argument("--disable-gpu")  # Tùy chọn này dành cho Windows
+        chrome_options.add_argument("--no-sandbox")  # Tùy chọn này dành cho Linux
 
+        # Khởi tạo ChromeDriver
+        service = Service(chromedriver_path)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # # Khởi tạo ChromeDriver
+        # service = Service(chromedriver_path)
+        # driver = webdriver.Chrome(service=service)
+
+        # Mở trang web
+        driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
         # Chờ trang tải
         time.sleep(1)
 
@@ -91,10 +101,6 @@ class Presenter:
         driver.get("http://192.168.0.65:8180/#menu=58&action=180")
 
         time.sleep(2)
-   
-   
-   #hàm lấy data header
-    def getDataHeader(self):
         listbody_divHeader = driver.find_element(By.ID,"lstMain-head")
 
         tableheader = listbody_divHeader.find_element(By.TAG_NAME,'table')
@@ -111,5 +117,80 @@ class Presenter:
             for col in col4:
                 print(col.text)
                 data_header.append(self.process_text(col.text))
+        self.crawldata(data_header,driver)
+   #hàm lấy data header
+   
+    def crawldata(data_header,driver):
+                # Tìm thẻ div với id là 'listbody'
+        listbody_div = driver.find_element(By.ID, 'lstMain-body')
 
-        return data_header
+        # Tìm thẻ table trong div 'listbody'
+        table = listbody_div.find_element(By.TAG_NAME, 'table')
+
+        object_array = []
+        #chỉ định đường dẫn
+        # Chỉ định đường dẫn nơi các tệp sẽ được tạo ra
+        output_directory = "d:/USER DATA/Documents/nd2developer/DataText/DataNhapTest"
+        csv_filename = "MaSanPhamISBT.csv"
+        json_filename = "MaSanPhamISBT.json"
+
+        # Tạo thư mục nếu nó chưa tồn tại
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+
+        # Đường dẫn đầy đủ đến các tệp
+        csv_file_path = os.path.join(output_directory, csv_filename)
+        json_file_path = os.path.join(output_directory, json_filename)
+        # Open the CSV file to write data
+        with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            # Giả sử 'tbodys' là danh sách các phần tử tbody lấy từ trang web
+            # Tìm tất cả các thẻ tbody trong table
+            tbodys = table.find_elements(By.TAG_NAME, "tbody")
+            # Khởi tạo 'rows' từ phần tử tbody đầu tiên
+            rows = tbodys[1].find_elements(By.TAG_NAME,'tr')
+            demstt = 0
+            breakSTT = 1
+            data_Array_all = []
+            # for row in rows2:
+            for row in rows:
+                # Lấy tất cả các cột trong hàng hiện tại
+                cols = row.find_elements(By.TAG_NAME,'td')
+                # Loại bỏ cột đầu tiên
+                cols2 = cols[1:]
+                
+                data_row = []
+                #VÒNG    
+                for col in cols2:
+                    if demstt == 20:
+                    #    time.sleep(3)
+                     print(str(demstt)+"||"+col.text)
+                    demstt = 0
+                    try:
+                        actions = ActionChains(driver)
+                        actions.move_to_element(col).perform()
+
+                        # Sử dụng WebDriverWait để đợi phần tử có thể truy cập
+                        text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+                        data_row.append(text)
+                        print(text + "\n")
+                    except Exception as e:
+                        print(f"Error accessing column: {e}")
+                        data_row.append("")
+                
+                # Ghi dữ liệu của hàng vào tệp CSV
+                csvwriter.writerow(data_row)
+                data_Array_all.append(data_row)
+                # After processing all columns in the row
+                demstt += 1
+        
+
+        object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_Array_all]
+        with open(json_file_path, 'w', encoding='utf-8') as json_file:
+            json.dump(object_array, json_file, ensure_ascii=False, indent=4)      
+
+        time.sleep(10)
+
+        # Close the browser
+        driver.quit()
+       

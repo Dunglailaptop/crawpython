@@ -129,7 +129,7 @@ with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
         cols2 = cols[1:]
         
         data_row = []
-
+        #VÒNG    
         for col in cols2:
             if demstt == 20:
             #    time.sleep(3)
