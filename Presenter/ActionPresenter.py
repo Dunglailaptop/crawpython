@@ -9,7 +9,23 @@ from selenium.webdriver.common.keys import Keys
 import time
 import csv
 import json
+import pandas as pd
+import time
+import csv
+import json
+import os
+import unicodedata
+import re
+# Đường dẫn tới chromedriver
+chromedriver_path = "indexcraw/chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
 
+# Khởi tạo ChromeDriver
+service = Service(chromedriver_path)
+driver = webdriver.Chrome(service=service)
+
+# Mở trang web
+driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
+driver.maximize_window()
 
 class Presenter:
     def __init__(self, model, view):
@@ -32,11 +48,11 @@ class Presenter:
         # Loại bỏ khoảng cách
         return re.sub(r'\s+', '', text)
 
-    def process_text(text):
-        text_without_accents = remove_vietnamese_accents(text)
-        text_without_spaces = remove_spaces(text_without_accents)
+    def process_text(self,text):
+        text_without_accents = self.remove_vietnamese_accents(text)
+        text_without_spaces = self.remove_spaces(text_without_accents)
         return text_without_spaces
-    
+     
      
     def on_button_clicked(self):
         # Lấy dữ liệu từ View
@@ -48,16 +64,7 @@ class Presenter:
         self.view.show_message(f"Bạn đã nhập: {data}")
     #Ham login
     def ActionLogin():
-            # Đường dẫn tới chromedriver
-        chromedriver_path = "indexcraw/chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
-
-        # Khởi tạo ChromeDriver
-        service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=service)
-
-        # Mở trang web
-        driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
-        driver.maximize_window()
+       
 
         # Chờ trang tải
         time.sleep(1)
@@ -84,3 +91,25 @@ class Presenter:
         driver.get("http://192.168.0.65:8180/#menu=58&action=180")
 
         time.sleep(2)
+   
+   
+   #hàm lấy data header
+    def getDataHeader(self):
+        listbody_divHeader = driver.find_element(By.ID,"lstMain-head")
+
+        tableheader = listbody_divHeader.find_element(By.TAG_NAME,'table')
+
+        tbodyheader = tableheader.find_elements(By.TAG_NAME,"tbody")
+
+        rows2 = tbodyheader[0].find_elements(By.TAG_NAME,"tr")
+        for row in rows2:
+            cols3 = row.find_elements(By.TAG_NAME,"th")
+            
+            col4 = cols3[1:]
+            data_header = []
+            
+            for col in col4:
+                print(col.text)
+                data_header.append(self.process_text(col.text))
+
+        return data_header
