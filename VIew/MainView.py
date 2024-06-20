@@ -1,5 +1,5 @@
 # view.py
-
+from tkinter import messagebox
 import tkinter as tk
 
 class View:
@@ -24,18 +24,27 @@ class View:
 
         self.label = tk.Label(root, text="hello con ket")
         self.label.pack()
+        # Tạo TextBox
+        text_box = tk.Text(root, height=5, width=30)
+        text_box.pack(pady=10)
+
         # Định nghĩa thuộc tính on_update_button_clicked trước khi sử dụng
         self.on_update_button_clicked = None
 
-        self.update_button = tk.Button(root, text="Update", command=self.handle_update_button_clicked)
+        self.update_button = tk.Button(root, text="Update")
         self.update_button.pack()
 
     def set_label_text(self, text):
         self.label.config(text=text)
 
     def bind_update_button(self, callback):
-        self.on_update_button_clicked = callback
+        self.get_textbox_data = callback
 
     def handle_update_button_clicked(self):
         if self.on_update_button_clicked:
            self.on_update_button_clicked()
+     
+    
+    def get_textbox_data(self):
+        messgae = self.text_box.get("1.0", tk.END).strip()
+        messagebox.showinfo("Thông tin nhập", messgae)
