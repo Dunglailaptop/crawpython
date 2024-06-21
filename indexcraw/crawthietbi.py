@@ -32,15 +32,15 @@ def process_text(text):
     
 # Đường dẫn tới chromedriver
 chromedriver_path = "chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
-# Cấu hình tùy chọn cho Chrome
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
-chrome_options.add_argument("--disable-gpu")  # Tùy chọn này dành cho Windows
-chrome_options.add_argument("--no-sandbox")  # Tùy chọn này dành cho Linux
+# # Cấu hình tùy chọn cho Chrome
+# chrome_options = Options()
+# chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
+# chrome_options.add_argument("--disable-gpu")  # Tùy chọn này dành cho Windows
+# chrome_options.add_argument("--no-sandbox")  # Tùy chọn này dành cho Linux
 
 # Khởi tạo ChromeDriver
 service = Service(chromedriver_path)
-driver = webdriver.Chrome(service=service, options=chrome_options)
+driver = webdriver.Chrome(service=service)
 
 # Mở trang web
 driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
@@ -68,7 +68,7 @@ save.click()
 # Chờ một lúc để xem kết quả
 time.sleep(3)
 
-driver.get("http://192.168.0.65:8180/#menu=332&action=600")
+driver.get("http://192.168.0.65:8180/#menu=291&action=557")
 
 time.sleep(2)
 
@@ -100,8 +100,8 @@ object_array = []
 #chỉ định đường dẫn
 # Chỉ định đường dẫn nơi các tệp sẽ được tạo ra
 output_directory = "d:/USER DATA/Documents/nd2developer/DataText/DataNhapTest"
-csv_filename = "MaSanPhamISBT.csv"
-json_filename = "MaSanPhamISBT.json"
+csv_filename = "LoMau.csv"
+json_filename = "LoMau.json"
 
 # Tạo thư mục nếu nó chưa tồn tại
 if not os.path.exists(output_directory):
@@ -118,11 +118,15 @@ with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
     tbodys = table.find_elements(By.TAG_NAME, "tbody")
     # Khởi tạo 'rows' từ phần tử tbody đầu tiên
     rows = tbodys[1].find_elements(By.TAG_NAME,'tr')
+    
     demstt = 0
     breakSTT = 1
     data_Array_all = []
     # for row in rows2:
     for row in rows:
+        # Click on the row element
+        actions = ActionChains(driver)
+        actions.move_to_element(row).click().perform()
         # Lấy tất cả các cột trong hàng hiện tại
         cols = row.find_elements(By.TAG_NAME,'td')
         # Loại bỏ cột đầu tiên
@@ -138,9 +142,10 @@ with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
             try:
                 actions = ActionChains(driver)
                 actions.move_to_element(col).perform()
-
+                  
                 # Sử dụng WebDriverWait để đợi phần tử có thể truy cập
                 text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+                
                 data_row.append(text)
                 print(text + "\n")
             except Exception as e:

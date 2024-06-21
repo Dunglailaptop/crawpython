@@ -9,7 +9,9 @@ def main():
     root = tk.Tk()
     model = Model()
     view = View(root)
-    Presenter.ActionLogin()
+   
+    presenter = Presenter(model, view)
+    presenter.ActionLogin()
     root.mainloop()
     
 

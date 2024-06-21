@@ -60,19 +60,19 @@ class Presenter:
        
         # Đường dẫn tới chromedriver
         chromedriver_path = "indexcraw/chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
-        # Cấu hình tùy chọn cho Chrome
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
-        chrome_options.add_argument("--disable-gpu")  # Tùy chọn này dành cho Windows
-        chrome_options.add_argument("--no-sandbox")  # Tùy chọn này dành cho Linux
-
-        # Khởi tạo ChromeDriver
-        service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # # Cấu hình tùy chọn cho Chrome
+        # chrome_options = Options()
+        # chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
+        # chrome_options.add_argument("--disable-gpu")  # Tùy chọn này dành cho Windows
+        # chrome_options.add_argument("--no-sandbox")  # Tùy chọn này dành cho Linux
 
         # # Khởi tạo ChromeDriver
         # service = Service(chromedriver_path)
-        # driver = webdriver.Chrome(service=service)
+        # driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # # Khởi tạo ChromeDriver
+        service = Service(chromedriver_path)
+        driver = webdriver.Chrome(service=service)
 
         # Mở trang web
         driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
@@ -162,10 +162,6 @@ class Presenter:
                 data_row = []
                 #VÒNG    
                 for col in cols2:
-                    if demstt == 20:
-                    #    time.sleep(3)
-                     print(str(demstt)+"||"+col.text)
-                    demstt = 0
                     try:
                         actions = ActionChains(driver)
                         actions.move_to_element(col).perform()
@@ -174,6 +170,8 @@ class Presenter:
                         text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
                         data_row.append(text)
                         print(text + "\n")
+                        demstt += 1
+                        print("Lấy data của hàng"+demstt)
                     except Exception as e:
                         print(f"Error accessing column: {e}")
                         data_row.append("")
