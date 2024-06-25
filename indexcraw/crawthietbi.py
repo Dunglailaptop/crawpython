@@ -4,124 +4,210 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-import pandas as pd
-import time
+from tkinter import ttk, filedialog
 import csv
 import json
+import time
+import tkinter as tk
 
-    
-# Đường dẫn tới chromedriver
-chromedriver_path = "chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
 
-# Khởi tạo ChromeDriver
-service = Service(chromedriver_path)
-driver = webdriver.Chrome(service=service)
 
-# Mở trang web
-driver.get("http://192.168.0.65:8180/")  # Thay thế bằng URL trang đăng nhập của bạn
-driver.maximize_window()
+# Function to initialize and log into the system
+def login(chromedriver_path, url, username, password):
+    # Initialize ChromeDriver
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    service = Service(chromedriver_path)
+    driver = webdriver.Chrome(service=service,options=options)
 
-# Chờ trang tải
-time.sleep(1)
+    # Open the website
+    driver.get(url)
+    driver.maximize_window()
 
-# Tìm và nhập tên đăng nhập
-username_input = driver.find_element(By.ID, "txtUsername")  # Thay thế bằng id của trường username
-username_input.send_keys("quyen.ngoq")
+    # Wait for the page to load
+    time.sleep(1)
 
-# Tìm và nhập mật khẩu
-password_input = driver.find_element(By.ID, "txtPassword")  # Thay thế bằng id của trường password
-password_input.send_keys("74777477")
+    # Find and enter username
+    username_input = driver.find_element(By.ID, "txtUsername")
+    username_input.send_keys(username)
 
-# Tìm và bấm nút đăng nhập
-login_button = driver.find_element(By.ID, "btnLogin")  # Thay thế bằng id của nút đăng nhập
-login_button.click()
+    # Find and enter password
+    password_input = driver.find_element(By.ID, "txtPassword")
+    password_input.send_keys(password)
 
-time.sleep(5)
+    # Find and click the login button
+    login_button = driver.find_element(By.ID, "btnLogin")
+    login_button.click()
 
-save = driver.find_element(By.ID,"btnSave")
-save.click()
-# Chờ một lúc để xem kết quả
-time.sleep(3)
+    # Wait for login to complete
+    time.sleep(5)
 
-driver.get("http://192.168.0.65:8180/#menu=58&action=180")
+    # Click save button
+    save = driver.find_element(By.ID, "btnSave")
+    save.click()
+    time.sleep(3)
 
-time.sleep(2)
+    return driver
 
-listbody_divHeader = driver.find_element(By.ID,"lstMain-head")
 
-tableheader = listbody_divHeader.find_element(By.TAG_NAME,'table')
- 
-tbodyheader = tableheader.find_elements(By.TAG_NAME,"tbody")
+# Function to select area data
+def select_area_data(driver, url):
+    driver.get(url)
+    time.sleep(2)
 
-rows2 = tbodyheader[0].find_elements(By.TAG_NAME,"tr")
-for row in rows2:
-    cols3 = row.find_elements(By.TAG_NAME,"th")
-    
-    col4 = cols3[1:]
-    data_header = []
-    
-    for col in col4:
-        print(col.text)
-        data_header.append(col.text)
 
-print(data_header)
-# Tìm thẻ div với id là 'listbody'
-listbody_div = driver.find_element(By.ID, 'lstMain-body')
+# Function to extract header data
+def extract_header_data(driver):
+    listbody_div_header = driver.find_element(By.ID, "lstMain-head")
+    table_header = listbody_div_header.find_element(By.TAG_NAME, 'table')
+    tbody_header = table_header.find_elements(By.TAG_NAME, "tbody")
+    rows = tbody_header[0].find_elements(By.TAG_NAME, "tr")
+    data_header = [col.text for row in rows for col in row.find_elements(By.TAG_NAME, "th")[1:]]
+    return data_header
 
-# Tìm thẻ table trong div 'listbody'
-table = listbody_div.find_element(By.TAG_NAME, 'table')
 
-object_array = []
-# Open the CSV file to write data
-with open('dataLuotSuIn.csv', 'w', newline='', encoding='utf-8') as csvfile:
-    csvwriter = csv.writer(csvfile)
-    # Giả sử 'tbodys' là danh sách các phần tử tbody lấy từ trang web
-    # Tìm tất cả các thẻ tbody trong table
+# Function to extract table data and save to CSV and JSON
+def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
+    listbody_div = driver.find_element(By.ID, 'lstMain-body')
+    table = listbody_div.find_element(By.TAG_NAME, 'table')
     tbodys = table.find_elements(By.TAG_NAME, "tbody")
-    # Khởi tạo 'rows' từ phần tử tbody đầu tiên
-    rows = tbodys[1].find_elements(By.TAG_NAME,'tr')
-    demstt = 0
-    breakSTT = 1
-    data_Array_all = []
-    # for row in rows2:
-    for row in rows:
-        # Lấy tất cả các cột trong hàng hiện tại
-        cols = row.find_elements(By.TAG_NAME,'td')
-        # Loại bỏ cột đầu tiên
-        cols2 = cols[1:]
-        
-        data_row = []
+    rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
 
-        for col in cols2:
-            if demstt == 20:
-            #    time.sleep(3)
-               print(str(demstt)+"||"+col.text)
-               demstt = 0
-            try:
-                actions = ActionChains(driver)
-                actions.move_to_element(col).perform()
+    data_array_all = []
 
-                # Sử dụng WebDriverWait để đợi phần tử có thể truy cập
-                text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
-                data_row.append(text)
-            except Exception as e:
-                print(f"Error accessing column: {e}")
-                data_row.append("")
-        
-        # Ghi dữ liệu của hàng vào tệp CSV
-        csvwriter.writerow(data_row)
-        data_Array_all.append(data_row)
-        # After processing all columns in the row
-        demstt += 1
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
+        csvwriter = csv.writer(csvfile)
+
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, 'td')[1:]
+            data_row = []
+
+            for col in cols:
+                try:
+                    actions = ActionChains(driver)
+                    actions.move_to_element(col).perform()
+                    text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+                    data_row.append(text)
+                except Exception as e:
+                    print(f"Error accessing column: {e}")
+                    data_row.append("")
+
+            csvwriter.writerow(data_row)
+            data_array_all.append(data_row)
+
+    object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
+
+    with open(json_filename, 'w', encoding='utf-8') as json_file:
+        json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+
+
+# Main function to run the script
+def main():
+    chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
+    login_url = "http://192.168.0.65:8180/"
+    area_data_url = "http://192.168.0.65:8180/#menu=58&action=180"
+    username = "quyen.ngoq"
+    password = "74777477"
+    csv_filename = 'dataLuotSuIn.csv'
+    json_filename = 'dataJsonLuotSuIn.json'
+
+    # Initialize and log into the system
+    driver = login(chromedriver_path, login_url, username, password)
+
+    # Select area data
+    select_area_data(driver, area_data_url)
+
+    # Extract header data
+    data_header = extract_header_data(driver)
+    print(data_header)
+
+    # Extract table data and save to CSV and JSON
+    extract_and_save_table_data(driver, data_header, csv_filename, json_filename)
+
+    # Wait for a while before closing the browser
+    time.sleep(10)
+
+    # Close the browser
+    driver.quit()
+
+def on_button_click():
+    print("Button clicked!")
+    
+
+def select_file():
+    file_path = filedialog.askopenfilename(
+        title="Select a JSON file",
+        filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+    )
+    if file_path:
+        with open(file_path, 'r', encoding='utf-8') as json_file:
+            data = json.load(json_file)
+            print(data)  # Print or process the JSON data as needed
+
+def khoitaoapp():
+    root = tk.Tk()
+    root.title("Tkinter ComboBox Example")
+# Đặt kích thước cho cửa sổ
+    window_width = 400
+    window_height = 300
+
+    # Lấy kích thước màn hình
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Tính toán vị trí để cửa sổ nằm giữa màn hình
+    position_x = (screen_width // 2) - (window_width // 2)
+    position_y = (screen_height // 2) - (window_height // 2)
+
+    # Đặt kích thước và vị trí cho cửa sổ
+    root.geometry(f'{window_width}x{window_height}+{position_x}+{position_y}')
+
+    # Mapping of combo box items to corresponding numbers
+    item_to_number = {
+        "Lô Máu": 1,
+        "Túi Máu": 2,
+        "Cấu Hình": 3
+    }
+    # Function to handle selection event
+    def on_select(event):
+         selected_item = combo.get()
+         selected_number = item_to_number.get(selected_item, None)
+         if selected_number is not None:
+          print(f"Selected number: {selected_number}")
+          main()
+         else:
+          print(f"Selected item is not valid: {selected_item}")
+        # Create a label to display instructions
+    label = ttk.Label(root, text="SIÊU PHẦN MỀM CRAW DATA")
+    label.pack(pady=10)
+    # Create a label to display instructions
+    label = ttk.Label(root, text="Choose an option:")
+    label.pack(pady=10)
+
+    # Create a ComboBox widget
+    combo = ttk.Combobox(root, values=list(item_to_number.keys()),width=30)
+    combo.pack(pady=10)
+   
+
+    # Set the default value (optional)
+    combo.set("Lô Máu")
+
+    # Bind the selection event
+    combo.bind("<<ComboboxSelected>>", on_select)
   
 
-object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_Array_all]
-with open('dataJsonLuotSuIn.json', 'w', encoding='utf-8') as json_file:
-    json.dump(object_array, json_file, ensure_ascii=False, indent=4)      
+    file_button = tk.Button(root, text="Select File", command=select_file, width=30)  # Corrected here
+    file_button.pack(pady=10)
+   
+    
 
-time.sleep(10)
+    # Start the Tkinter event loop
+    root.mainloop()
 
-# Close the browser
-driver.quit()
 
+# Run the main function
+if __name__ == "__main__":
+    khoitaoapp()
