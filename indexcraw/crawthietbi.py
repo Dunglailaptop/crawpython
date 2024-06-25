@@ -4,13 +4,30 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from tkinter import ttk, filedialog
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+import time
 import csv
 import json
-import time
-import tkinter as tk
+import unicodedata
+import re
+from tkinter import ttk, filedialog, Tk
 
+def remove_vietnamese_accents(text):
+    # Chuyển đổi chuỗi thành dạng chuẩn NFD (Normalization Form D)
+    normalized_text = unicodedata.normalize('NFD', text)
+    # Loại bỏ các ký tự dấu (accent)
+    without_accents = ''.join(c for c in normalized_text if unicodedata.category(c) != 'Mn')
+    return without_accents
 
+def remove_spaces(text):
+    # Loại bỏ khoảng cách
+    return re.sub(r'\s+', '', text)
+
+def process_text(text):
+    text_without_accents = remove_vietnamese_accents(text)
+    text_without_spaces = remove_spaces(text_without_accents)
+    return text_without_spaces
 
 # Function to initialize and log into the system
 def login(chromedriver_path, url, username, password):
@@ -148,7 +165,7 @@ def select_file():
             print(data)  # Print or process the JSON data as needed
 
 def khoitaoapp():
-    root = tk.Tk()
+    root = Tk()
     root.title("Tkinter ComboBox Example")
 # Đặt kích thước cho cửa sổ
     window_width = 400
@@ -199,7 +216,7 @@ def khoitaoapp():
     combo.bind("<<ComboboxSelected>>", on_select)
   
 
-    file_button = tk.Button(root, text="Select File", command=select_file, width=30)  # Corrected here
+    file_button = ttk.Button(root, text="Select File", command=select_file, width=30)  # Corrected here
     file_button.pack(pady=10)
    
     
