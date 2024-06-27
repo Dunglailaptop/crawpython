@@ -31,7 +31,7 @@ def process_text(text):
     return text_without_spaces
     
 # Đường dẫn tới chromedriver
-chromedriver_path = "chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
+chromedriver_path = "d:/USER DATA/Documents/crawpython/indexcraw/chromedriver.exe"  # Đảm bảo đường dẫn này là đúng
 # # Cấu hình tùy chọn cho Chrome
 # chrome_options = Options()
 # chrome_options.add_argument("--headless")  # Chạy ở chế độ headless
