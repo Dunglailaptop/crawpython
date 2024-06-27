@@ -141,7 +141,21 @@ def set_date2(driver, element_id, date_value):
         # Click vào thẻ <span> để mở lịch
         findspan.click()
         time.sleep(1)
-        findspan.click()    
+
+         
+           # Tách date_value thành ngày, tháng và năm
+        day, month, year = date_value.split('/')
+        
+        # Gọi hàm select_date để chọn tháng và năm
+        select_date(driver, int(month) - 1, year)  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
+        
+        # Chọn ngày
+        day_xpath = f"//a[text()='{int(day)}']"
+        day_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, day_xpath))
+        )
+        day_element.click()
+
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 

@@ -10,7 +10,6 @@ from selenium.webdriver.chrome.options import Options
 import time
 import csv
 import json
-import pandas as pd
 import time
 import csv
 import json
