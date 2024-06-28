@@ -75,16 +75,7 @@ def login(chromedriver_path, url, username, password):
 
 def select_date(driver, month_value, year_value):
     try:
-        # Chờ đợi thẻ <select> của tháng xuất hiện
-        month_select_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'ui-datepicker-month'))
-        )
-        # Tạo đối tượng Select và chọn giá trị tháng
-        month_select = Select(month_select_element)
-        month_select.select_by_value(str(month_value))
-        time.sleep(1)  # Thêm thời gian chờ
-
-        # Chờ đợi thẻ <select> của năm xuất hiện
+           # Chờ đợi thẻ <select> của năm xuất hiện
         year_select_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'ui-datepicker-year'))
         )
@@ -92,6 +83,16 @@ def select_date(driver, month_value, year_value):
         year_select = Select(year_select_element)
         year_select.select_by_value(str(year_value))
         time.sleep(1)  # Thêm thời gian chờ
+        # Chờ đợi thẻ <select> của tháng xuất hiện
+        month_select_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'ui-datepicker-month'))
+        )
+        # Tạo đối tượng Select và chọn giá trị tháng
+        month_select = Select(month_select_element)
+        month_select.select_by_value(str(month_value))
+        time.sleep(5)  # Thêm thời gian chờ
+
+     
 
         print(f"Đã chọn tháng {month_value + 1} và năm {year_value}")
 
@@ -129,12 +130,9 @@ def set_date(driver, element_id, date_value):
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
-def click_search_button(driver):
+def click_search_button(driver,csvfile,jsonfile):
     try:
-        # Chờ đến khi phần tử với id "menuCrud" xuất hiện
-        menu_crud = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "menuCrud"))
-        )
+        menu_crud = driver.find_element(By.ID,"menuCrud")
         
         # Tìm thẻ span với id "btnSearch" bên trong menuCrud
         btn_search = menu_crud.find_element(By.ID, "btnSearch")
@@ -142,38 +140,49 @@ def click_search_button(driver):
         # Click vào thẻ span
         btn_search.click()
         
-        print("Đã click vào nút tìm kiếm.")
+        time.sleep(3)
+        
+         # Extract header data
+        data_header = extract_header_data(driver)
+        print(data_header)
+
+        # Extract table data and save to CSV and JSON
+        extract_and_save_table_data(driver, data_header, csvfile, jsonfile)
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
-def select_area_data(driver, url, date1, date2):
+def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
     driver.get(url)
     time.sleep(2)
-    set_date(driver, "dbFrom", date1)
-    click_search_button(driver)
-    # set_date(driver, "dbTo", date2)
-    try:
-        # Add explicit wait to ensure the element is present
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "menuCrud"))
-        )
+    set_date(driver, "dbTo", "28/06/2024")
+    set_date(driver, "dbFrom","01/06/2024")
+    click_search_button(driver,csvfile,jsonfile)
+    
 
-        getdiv = driver.find_element(By.ID, "menuCrud")
-        getdivs = getdiv.find_element(By.CSS_SELECTOR, ".j-bar.j-button-bar")
-        getspan = getdivs.find_element(By.CSS_SELECTOR, ".j-bar-warp")
-        getspans = getspan.find_element(By.CSS_SELECTOR, ".j-bar-info")
-        print(getspans.text)
+    # # # set_date(driver, "dbTo", date2)
+    # try:
+    #             # Add explicit wait to ensure the element is present
+    #     WebDriverWait(driver, 10).until(
+    #         EC.presence_of_element_located((By.ID, "menuCrud"))
+    #     )
 
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        driver.switch_to.default_content()
+    #     getdiv = driver.find_element(By.ID, "menuCrud")
+    #     getdivs = getdiv.find_element(By.CSS_SELECTOR, ".j-bar.j-button-bar")
+    #     getspan = getdivs.find_element(By.CSS_SELECTOR, ".j-bar-warp")
+    #     getspans = getspan.find_element(By.CSS_SELECTOR, ".j-bar-info")
+    #     print(getspans.text)
+    # except Exception as e:
+    #     print(f"Error: {e}")
+    # finally:
+    #     driver.switch_to.default_content()
 
 
 # Function to extract header data
 def extract_header_data(driver):
-    listbody_div_header = driver.find_element(By.ID, "lstMain-head")
+    listbody_div_header = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "lstMain-head"))
+    )
     table_header = listbody_div_header.find_element(By.TAG_NAME, 'table')
     tbody_header = table_header.find_elements(By.TAG_NAME, "tbody")
     rows = tbody_header[0].find_elements(By.TAG_NAME, "tr")
@@ -183,7 +192,9 @@ def extract_header_data(driver):
 
 # Function to extract table data and save to CSV and JSON
 def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
-    listbody_div = driver.find_element(By.ID, 'lstMain-body')
+    listbody_div = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'lstMain-body'))
+    )
     table = listbody_div.find_element(By.TAG_NAME, 'table')
     tbodys = table.find_elements(By.TAG_NAME, "tbody")
     rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
@@ -241,14 +252,9 @@ def main(type,date1,date2):
     driver = login(chromedriver_path, login_url, username, password)
 
     # Select area data
-    select_area_data(driver, area_data_url,date1,date2)
+    select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename)
 
-    # Extract header data
-    data_header = extract_header_data(driver)
-    print(data_header)
-
-    # Extract table data and save to CSV and JSON
-    extract_and_save_table_data(driver, data_header, csv_filename, json_filename)
+   
  
     # Wait for a while before closing the browser
     time.sleep(10)
