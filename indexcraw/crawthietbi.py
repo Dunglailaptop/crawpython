@@ -82,7 +82,8 @@ def select_date(driver, month_value, year_value):
         # Tạo đối tượng Select và chọn giá trị tháng
         month_select = Select(month_select_element)
         month_select.select_by_value(str(month_value))
-        
+        time.sleep(1)  # Thêm thời gian chờ
+
         # Chờ đợi thẻ <select> của năm xuất hiện
         year_select_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'ui-datepicker-year'))
@@ -90,83 +91,68 @@ def select_date(driver, month_value, year_value):
         # Tạo đối tượng Select và chọn giá trị năm
         year_select = Select(year_select_element)
         year_select.select_by_value(str(year_value))
-        
+        time.sleep(1)  # Thêm thời gian chờ
+
         print(f"Đã chọn tháng {month_value + 1} và năm {year_value}")
-        
+
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
-
-def set_date1(driver, element_id, date_value):
+def set_date(driver, element_id, date_value):
     try:
-        # Chờ đến khi phần tử có ID 'dbFrom' xuất hiện
+        # Chờ đến khi phần tử có ID xuất hiện
         searchIdDateTime = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, element_id))
         )
-        
-        # Tìm thẻ <span> với class 'input-group-addon' bên trong phần tử 'dbFrom'
+
+        # Tìm thẻ <span> với class 'input-group-addon' bên trong phần tử
         findspan = searchIdDateTime.find_element(By.CLASS_NAME, 'input-group-addon')
-        
+
         # Click vào thẻ <span> để mở lịch
         findspan.click()
-        time.sleep(1) 
-       
-        
-           # Tách date_value thành ngày, tháng và năm
+        time.sleep(2)  # Thêm thời gian chờ để đảm bảo lịch được mở
+
+        # Tách date_value thành ngày, tháng và năm
         day, month, year = date_value.split('/')
-        
+
         # Gọi hàm select_date để chọn tháng và năm
         select_date(driver, int(month) - 1, year)  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
-        
+
         # Chọn ngày
         day_xpath = f"//a[text()='{int(day)}']"
         day_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, day_xpath))
         )
+        time.sleep(1)  # Thêm thời gian chờ
         day_element.click()
-         
+
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
-def set_date2(driver, element_id, date_value):
+def click_search_button(driver):
     try:
-        # Chờ đến khi phần tử có ID 'dbFrom' xuất hiện
-        searchIdDateTime = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, element_id))
+        # Chờ đến khi phần tử với id "menuCrud" xuất hiện
+        menu_crud = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "menuCrud"))
         )
         
-        # Tìm thẻ <span> với class 'input-group-addon' bên trong phần tử 'dbFrom'
-        findspan = searchIdDateTime.find_element(By.CLASS_NAME, 'input-group-addon')
+        # Tìm thẻ span với id "btnSearch" bên trong menuCrud
+        btn_search = menu_crud.find_element(By.ID, "btnSearch")
         
-        # Click vào thẻ <span> để mở lịch
-        findspan.click()
-        time.sleep(1)
-
-         
-           # Tách date_value thành ngày, tháng và năm
-        day, month, year = date_value.split('/')
+        # Click vào thẻ span
+        btn_search.click()
         
-        # Gọi hàm select_date để chọn tháng và năm
-        select_date(driver, int(month) - 1, year)  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
+        print("Đã click vào nút tìm kiếm.")
         
-        # Chọn ngày
-        day_xpath = f"//a[text()='{int(day)}']"
-        day_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, day_xpath))
-        )
-        day_element.click()
-
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
-# Function to select area data
-def select_area_data(driver, url,date1,date2):
+def select_area_data(driver, url, date1, date2):
     driver.get(url)
     time.sleep(2)
-    # keydate1 = driver.find_element(By.ID,"cff4")
-    # keydate1.send_keys("27/09/2024")
-    set_date1(driver, "dbFrom", "27/09/2024")
-    set_date2(driver, "dbTo","27/09/2024")
+    set_date(driver, "dbFrom", date1)
+    click_search_button(driver)
+    # set_date(driver, "dbTo", date2)
     try:
         # Add explicit wait to ensure the element is present
         WebDriverWait(driver, 10).until(
@@ -182,7 +168,8 @@ def select_area_data(driver, url,date1,date2):
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        driver.switch_to.default_content()  # A
+        driver.switch_to.default_content()
+
 
 # Function to extract header data
 def extract_header_data(driver):
@@ -285,8 +272,8 @@ def select_file():
 
 
 def get_dates(cal,cal2,number):
-    date1 = cal.get_date().strftime('%d/%m/%Y %H:%M')
-    date2 = cal2.get_date().strftime('%d/%m/%Y %H:%M')
+    date1 = cal.get_date().strftime('%d/%m/%Y')
+    date2 = cal2.get_date().strftime('%d/%m/%Y')
     print(f"Selected Date 1: {date1}")
     print(f"Selected Date 2: {date2}")
     main(number,date1,date2)
