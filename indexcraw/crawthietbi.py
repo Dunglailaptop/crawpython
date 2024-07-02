@@ -35,7 +35,7 @@ def process_text(text):
 
 # Function to initialize and log into the system
 def login(chromedriver_path, url, username, password):
-    # Initialize ChromeDriver
+    # # Initialize ChromeDriver
     # options = webdriver.ChromeOptions()
     # options.add_argument("--headless")
     # options.add_argument("--disable-gpu")
@@ -89,6 +89,7 @@ def select_date(driver, month_value, year_value):
         )
         # Tạo đối tượng Select và chọn giá trị tháng
         month_select = Select(month_select_element)
+        print("tháng đã chọn vào hệ thống:" + str(month_value))
         month_select.select_by_value(str(month_value))
         time.sleep(5)  # Thêm thời gian chờ
 
@@ -115,7 +116,7 @@ def set_date(driver, element_id, date_value):
 
         # Tách date_value thành ngày, tháng và năm
         day, month, year = date_value.split('/')
-
+        print(month)
         # Gọi hàm select_date để chọn tháng và năm
         select_date(driver, int(month) - 1, year)  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
 
@@ -129,6 +130,98 @@ def set_date(driver, element_id, date_value):
 
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
+##lay ngay 2
+# def set_date2(driver, element_id, date_value):
+#     try:
+#         # Chờ đến khi phần tử có ID xuất hiện
+#         searchIdDateTime = WebDriverWait(driver, 10).until(
+#             EC.presence_of_element_located((By.ID, element_id))
+#         )
+
+#         # Tìm thẻ <span> với class 'input-group-addon' bên trong phần tử
+#         findspan = searchIdDateTime.find_element(By.CLASS_NAME, 'input-group-addon')
+
+#         # Click vào thẻ <span> để mở lịch
+#         findspan.click()
+#         time.sleep(2)  # Thêm thời gian chờ để đảm bảo lịch được mở
+
+#         # Tách date_value thành ngày, tháng và năm
+#         day, month, year = date_value.split('/')
+#         print(int(month) + 1)
+#         # Gọi hàm select_date để chọn tháng và năm
+#         select_date(driver, int(month) - 1, year)  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
+
+#         # Chọn ngày
+#         day_xpath = f"//td[@data-month='{month}' and @data-year='{year}']/a[text()='{day}']"
+#         day_element = WebDriverWait(driver, 10).until(
+#             EC.presence_of_element_located((By.XPATH, day_xpath))
+#         )
+#         time.sleep(1)  # Thêm thời gian chờ
+#         day_element.click()
+
+#     except Exception as e:
+#         print(f"Lỗi trong quá trình xử lý: {e}")
+        
+ #ngay 2
+def set_date2(driver, element_id, date_value):
+    try:
+        # Chờ đến khi phần tử có ID xuất hiện
+        searchIdDateTime = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, element_id))
+        )
+
+        # Tìm thẻ <span> với class 'input-group-addon' bên trong phần tử
+        findspan = searchIdDateTime.find_element(By.CLASS_NAME, 'input-group-addon')
+
+        # Click vào thẻ <span> để mở lịch
+        findspan.click()
+        time.sleep(2)  # Thêm thời gian chờ để đảm bảo lịch được mở
+
+        # Tách date_value thành ngày, tháng và năm
+        day, month, year = date_value.split('/')
+        day = int(day)
+        month = int(month) - 1  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
+        year = int(year)
+
+        # Gọi hàm select_date để chọn tháng và năm
+        select_date(driver, month, year)
+
+        # Chọn ngày
+        day_xpath = f"//td[@data-month='{month}' and @data-year='{year}']/a[text()='{day}']"
+        day_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, day_xpath))
+        )
+        time.sleep(1)  # Thêm thời gian chờ
+        day_element.click()
+
+    except Exception as e:
+        print(f"Lỗi trong quá trình xử lý: {e}")
+
+def select_date(driver, month, year):
+    try:
+        # Chọn năm
+        year_select = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'ui-datepicker-year'))
+        )
+        year_select.click()
+        year_option = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, f"//option[@value='{year}']"))
+        )
+        year_option.click()
+
+        # Chọn tháng
+        month_select = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'ui-datepicker-month'))
+        )
+        month_select.click()
+        month_option = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, f"//option[@value='{month}']"))
+        )
+        month_option.click()
+
+    except Exception as e:
+        print(f"Lỗi khi chọn tháng và năm: {e}")
+##       
 
 def click_search_button(driver,csvfile,jsonfile):
     try:
@@ -155,7 +248,7 @@ def click_search_button(driver,csvfile,jsonfile):
 def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
     driver.get(url)
     time.sleep(2)
-    set_date(driver, "dbTo", "28/06/2024")
+    set_date2(driver, "dbTo", "28/06/2024")
     set_date(driver, "dbFrom","01/06/2024")
     click_search_button(driver,csvfile,jsonfile)
     
