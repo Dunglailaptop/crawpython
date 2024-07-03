@@ -1,3 +1,5 @@
+import os
+import math
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -35,41 +37,48 @@ def process_text(text):
 
 # Function to initialize and log into the system
 def login(chromedriver_path, url, username, password):
-    # # Initialize ChromeDriver
-    # options = webdriver.ChromeOptions()
-    # options.add_argument("--headless")
-    # options.add_argument("--disable-gpu")
-    # options.add_argument("--no-sandbox")
-    # options.add_argument("--disable-dev-shm-usage")
-    service = Service(chromedriver_path)
-    driver = webdriver.Chrome(service=service)
+    try:      
+        if not os.path.isfile(chromedriver_path):
+            raise ValueError(f"The path is not a valid file: {chromedriver_path}")
+        
+        print(f"Using chromedriver at: {chromedriver_path}")
+        # # # Initialize ChromeDriver
+        # options = webdriver.ChromeOptions()
+        # options.add_argument("--headless")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
+        service = Service(chromedriver_path)
+        driver = webdriver.Chrome(service=service)
 
-    # Open the website
-    driver.get(url)
-    driver.maximize_window()
+        # Open the website
+        driver.get(url)
+        driver.maximize_window()
 
-    # Wait for the page to load
-    time.sleep(1)
+        # Wait for the page to load
+        time.sleep(1)
 
-    # Find and enter username
-    username_input = driver.find_element(By.ID, "txtUsername")
-    username_input.send_keys(username)
+        # Find and enter username
+        username_input = driver.find_element(By.ID, "txtUsername")
+        username_input.send_keys(username)
 
-    # Find and enter password
-    password_input = driver.find_element(By.ID, "txtPassword")
-    password_input.send_keys(password)
+        # Find and enter password
+        password_input = driver.find_element(By.ID, "txtPassword")
+        password_input.send_keys(password)
 
-    # Find and click the login button
-    login_button = driver.find_element(By.ID, "btnLogin")
-    login_button.click()
+        # Find and click the login button
+        login_button = driver.find_element(By.ID, "btnLogin")
+        login_button.click()
 
-    # Wait for login to complete
-    time.sleep(5)
+        # Wait for login to complete
+        time.sleep(5)
 
-    # Click save button
-    save = driver.find_element(By.ID, "btnSave")
-    save.click()
-    time.sleep(3)
+        # Click save button
+        save = driver.find_element(By.ID, "btnSave")
+        save.click()
+        time.sleep(3)
+    except Exception as e:
+        print(f"Lỗi trong quá trình thực thi chính: {e}")
 
     return driver
 
@@ -130,6 +139,8 @@ def set_date(driver, element_id, date_value):
 
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
+#ngay 
+        
 ##lay ngay 2
 # def set_date2(driver, element_id, date_value):
 #     try:
@@ -161,7 +172,57 @@ def set_date(driver, element_id, date_value):
 
 #     except Exception as e:
 #         print(f"Lỗi trong quá trình xử lý: {e}")
+
+#check disabled và lấy tổng số phần tử
+def check_and_click_page(driver):
+    try:
+        # Chờ đến khi phần tử có class 'j-bar-last' xuất hiện
+        buttons = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, 'j-bar-last'))
+        )
+        time.sleep(3)
         
+        # Tìm phần tử với thuộc tính 'disabled="disabled"' và click vào nó
+        for button in buttons:
+            if button.get_attribute('disabled') == None:
+                driver.execute_script("arguments[0].click();", button)  # Sử dụng JavaScript để click
+                print("Clicked on the disabled 'j-bar-last' button")
+                break
+
+        time.sleep(3)
+
+        # Lấy giá trị sau dấu '/'
+        span_text = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'j-bar-info'))
+        ).text
+        total_value = span_text.split('/')[-1].strip().strip(']')
+        print(f"Total value after '/': {total_value}")
+        
+        return total_value
+
+    except Exception as e:
+        print(f"Lỗi trong quá trình xử lý: {e}")
+        return None
+#call back
+def check_and_click_page_callback(driver):
+    try:
+        # Chờ đến khi phần tử có class 'j-bar-last' xuất hiện
+        buttons = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, 'j-bar-first'))
+        )
+        time.sleep(3)
+        
+        # Tìm phần tử với thuộc tính 'disabled="disabled"' và click vào nó
+        for button in buttons:
+            if button.get_attribute('disabled') == None:
+                driver.execute_script("arguments[0].click();", button)  # Sử dụng JavaScript để click
+                print("Clicked on the disabled 'j-bar-last' button")
+                break
+
+        time.sleep(3)
+    except Exception as e:
+        print(f"Lỗi trong quá trình xử lý: {e}")
+        return None
  #ngay 2
 def set_date2(driver, element_id, date_value):
     try:
@@ -222,6 +283,12 @@ def select_date(driver, month, year):
     except Exception as e:
         print(f"Lỗi khi chọn tháng và năm: {e}")
 ##       
+def click_next(driver):
+    getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
+    getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-next")
+    print(getclick.get_attribute('outerHTML'))
+    if getclick.get_attribute('disabled') == None:
+       getclick.click()
 
 def click_search_button(driver,csvfile,jsonfile):
     try:
@@ -233,14 +300,33 @@ def click_search_button(driver,csvfile,jsonfile):
         # Click vào thẻ span
         btn_search.click()
         
-        time.sleep(3)
+        time.sleep(5)
+        Total = check_and_click_page(driver)
+        # if Total is not None:
+        #     numberpage = Total / 80
+        #     numberpage_rounded = math.ceil(numberpage)
+        #     print(f"Number of pages (rounded up): {numberpage_rounded}")
+        # check_and_click_page_callback(driver)
+        getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
+        getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-first")
+        print(getclick.get_attribute('outerHTML'))
+        if getclick.get_attribute('disabled') == None:
+           getclick.click()
         
          # Extract header data
         data_header = extract_header_data(driver)
         print(data_header)
-
+        iterations = 4
+        for i in range(iterations):
+          csv_file = i + csvfile
+          json_file = i + jsonfile
+          if i > 0:
+            click_next(driver)
+            print(f"Iteration {i + 1}")
+          extract_and_save_table_data(driver, data_header, csv_file, json_file)
+           
         # Extract table data and save to CSV and JSON
-        extract_and_save_table_data(driver, data_header, csvfile, jsonfile)
+        # extract_and_save_table_data(driver, data_header, csvfile, jsonfile)
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
@@ -248,10 +334,11 @@ def click_search_button(driver,csvfile,jsonfile):
 def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
     driver.get(url)
     time.sleep(2)
-    set_date2(driver, "dbTo", "28/06/2024")
-    set_date(driver, "dbFrom","28/06/2024")
+    set_date2(driver, "dbFrom","01/01/2023")
+    set_date2(driver, "dbTo", "30/04/2023")
+ 
     click_search_button(driver,csvfile,jsonfile)
-    
+    # check_and_click_page(driver)
 
     # # # set_date(driver, "dbTo", date2)
     # try:
@@ -283,6 +370,64 @@ def extract_header_data(driver):
     return data_header
 
 
+
+    
+# def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
+#     listbody_div = WebDriverWait(driver, 10).until(
+#             EC.presence_of_element_located((By.ID, 'lstMain-body'))
+#     )
+#     table = listbody_div.find_element(By.TAG_NAME, 'table')
+#     tbodys = table.find_elements(By.TAG_NAME, "tbody")
+#     rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
+
+#     data_array_all = []
+#     number = 1
+
+#     # Kiểm tra xem tệp CSV có tồn tại hay không
+#     csv_file_exists = os.path.exists(csv_filename)
+#     json_file_exists = os.path.exists(json_filename)
+
+#     # Mở tệp CSV ở chế độ ghi thêm ('a') nếu nó tồn tại và ở chế độ ghi ('w') nếu không
+#     with open(csv_filename, 'a' if csv_file_exists else 'w', newline='', encoding='utf-8') as csvfile:
+#         csvwriter = csv.writer(csvfile)
+
+#         # Ghi tiêu đề vào CSV nếu tệp không tồn tại
+#         if not csv_file_exists:
+#             csvwriter.writerow(['Number'] + data_header)
+
+#         for row in rows:
+#             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
+#             data_row = []
+#             data_row.append(number)
+#             number += 1
+#             for col in cols:
+#                 try:
+#                     actions = ActionChains(driver)
+#                     actions.move_to_element(col).perform()
+#                     text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+#                     data_row.append(text)
+#                 except Exception as e:
+#                     print(f"Error accessing column: {e}")
+#                     data_row.append("")
+
+#             csvwriter.writerow(data_row)
+#             data_array_all.append(data_row)
+
+#     # Cập nhật tệp JSON
+#     try:
+#         if json_file_exists:
+#             with open(json_filename, 'r', encoding='utf-8') as json_file:
+#                 object_array = json.load(json_file)
+#         else:
+#             object_array = []
+
+#         object_array.extend([{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all])
+
+#         with open(json_filename, 'w', encoding='utf-8') as json_file:
+#             json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+
+#     except Exception as e:
+#         print(f"Lỗi trong quá trình xử lý JSON: {e}")
 # Function to extract table data and save to CSV and JSON
 def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
     listbody_div = WebDriverWait(driver, 10).until(
@@ -293,14 +438,15 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
     rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
 
     data_array_all = []
-
+    number = 1
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
-
+        
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
             data_row = []
-
+            data_row.append(number)
+            number += 1
             for col in cols:
                 try:
                     actions = ActionChains(driver)
@@ -322,38 +468,38 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
 
 # Main function to run the script
 def main(type,date1,date2):
-    chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
-    login_url = "http://192.168.0.65:8180/"
-    area_data_url = ""
-    username = "quyen.ngoq"
-    password = "74777477"
-    csv_filename = ''
-    json_filename = ''
-    if type == 1:
-      area_data_url = "http://192.168.0.65:8180/#menu=291&action=557"
-      csv_filename = 'LoMau.csv'
-      json_filename = 'LoMau.json'
-    elif type == 2:
-      area_data_url = "http://192.168.0.65:8180/#menu=292&action=547"
-      csv_filename = 'TuiMau.csv'
-      json_filename = 'TuiMau.json'
-   
-    
-   
+    try:     
+        chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
+        login_url = "http://192.168.0.65:8180/"
+        area_data_url = ""
+        username = "quyen.ngoq"
+        password = "74777477"
+        csv_filename = ''
+        json_filename = ''
+        if type == 1:
+            area_data_url = "http://192.168.0.65:8180/#menu=291&action=557"
+            csv_filename = 'LoMau.csv'
+            json_filename = 'LoMau.json'
+        elif type == 2:
+            area_data_url = "http://192.168.0.65:8180/#menu=292&action=547"
+            csv_filename = 'TuiMau.csv'
+            json_filename = 'TuiMau.json'
 
-    # Initialize and log into the system
-    driver = login(chromedriver_path, login_url, username, password)
 
-    # Select area data
-    select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename)
-
-   
- 
-    # Wait for a while before closing the browser
-    time.sleep(10)
-
-    # Close the browser
-    driver.quit()
+        print(f"Chromedriver path: {chromedriver_path}")
+        # Initialize and log into the system
+        driver = login(chromedriver_path, login_url, username, password)
+        if not driver:
+            print("Failed to initialize the web driver.")
+            return
+        # Select area data
+        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename)
+        # Wait for a while before closing the browser
+        time.sleep(10)
+        # Close the browser
+        driver.quit()
+    except Exception as e:
+        print(f"Lỗi trong quá trình thực thi chính: {e}")
 
 def on_button_click():
     print("Button clicked!")
