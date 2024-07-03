@@ -121,7 +121,7 @@ def set_date(driver, element_id, date_value):
         select_date(driver, int(month) - 1, year)  # Chuyển đổi tháng về dạng số và trừ 1 vì tháng trong datepicker bắt đầu từ 0
 
         # Chọn ngày
-        day_xpath = f"//a[text()='{int(day)}']"
+        day_xpath = f"//td[not(contains(@class, 'ui-datepicker-other-month')) and @data-month='{month}' and @data-year='{year}']/a[text()='{day}']"
         day_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, day_xpath))
         )
@@ -187,7 +187,7 @@ def set_date2(driver, element_id, date_value):
         select_date(driver, month, year)
 
         # Chọn ngày
-        day_xpath = f"//td[@data-month='{month}' and @data-year='{year}']/a[text()='{day}']"
+        day_xpath = f"//td[not(contains(@class, 'ui-datepicker-other-month')) and @data-month='{month}' and @data-year='{year}']/a[text()='{day}']"
         day_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, day_xpath))
         )
@@ -249,7 +249,7 @@ def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
     driver.get(url)
     time.sleep(2)
     set_date2(driver, "dbTo", "28/06/2024")
-    set_date(driver, "dbFrom","01/06/2024")
+    set_date(driver, "dbFrom","28/06/2024")
     click_search_button(driver,csvfile,jsonfile)
     
 
