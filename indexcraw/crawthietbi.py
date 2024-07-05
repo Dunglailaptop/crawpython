@@ -1,5 +1,6 @@
 import os
 import math
+import requests
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,17 +16,40 @@ import csv
 import json
 import unicodedata
 import re
+from unidecode import unidecode 
 from tkinter import ttk, filedialog, Tk
 import datetime
 from tkinter import *
 from tkcalendar import DateEntry
+
+
+def call_api_import(datapost,urls):
+    url = urls
+   
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, json=datapost)
+
+    if response.status_code == 200:
+        data = response.json()
+        print(data)
+        return data
+    else:
+        print(f"Yêu cầu thất bại với mã lỗi: {response.status_code}")
+        Message = f"Yêu cầu thất bại với mã lỗi: {response.status_code}"
+        return Message
 
 def remove_vietnamese_accents(text):
     # Chuyển đổi chuỗi thành dạng chuẩn NFD (Normalization Form D)
     normalized_text = unicodedata.normalize('NFD', text)
     # Loại bỏ các ký tự dấu (accent)
     without_accents = ''.join(c for c in normalized_text if unicodedata.category(c) != 'Mn')
+    # Thay thế chữ Đ và đ thành D và d
+    without_accents = without_accents.replace('Đ', 'D').replace('đ', 'd')
     return without_accents
+
 
 def remove_spaces(text):
     # Loại bỏ khoảng cách
@@ -44,13 +68,13 @@ def login(chromedriver_path, url, username, password):
         
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
-        # options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")
-        # options.add_argument("--disable-gpu")
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=service)
+        driver = webdriver.Chrome(service=service,options=options)
 
         # Open the website
         driver.get(url)
@@ -338,7 +362,7 @@ def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
     driver.get(url)
     time.sleep(2)
     set_date2(driver, "dbFrom","01/01/2023")
-    set_date2(driver, "dbTo", "30/04/2023")
+    set_date2(driver, "dbTo", "31/01/2023")
  
     click_search_button(driver,csvfile,jsonfile)
     # check_and_click_page(driver)
@@ -369,118 +393,63 @@ def extract_header_data(driver):
     table_header = listbody_div_header.find_element(By.TAG_NAME, 'table')
     tbody_header = table_header.find_elements(By.TAG_NAME, "tbody")
     rows = tbody_header[0].find_elements(By.TAG_NAME, "tr")
-    data_header = [col.text for row in rows for col in row.find_elements(By.TAG_NAME, "th")[1:]]
+    data_header = [process_text(col.text) for row in rows for col in row.find_elements(By.TAG_NAME, "th")[1:]]
     return data_header
 
 
 
     
-# def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
-#     listbody_div = WebDriverWait(driver, 10).until(
-#             EC.presence_of_element_located((By.ID, 'lstMain-body'))
-#     )
-#     table = listbody_div.find_element(By.TAG_NAME, 'table')
-#     tbodys = table.find_elements(By.TAG_NAME, "tbody")
-#     rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
 
-#     data_array_all = []
-#     number = 1
-
-#     # Kiểm tra xem tệp CSV có tồn tại hay không
-#     csv_file_exists = os.path.exists(csv_filename)
-#     json_file_exists = os.path.exists(json_filename)
-
-#     # Mở tệp CSV ở chế độ ghi thêm ('a') nếu nó tồn tại và ở chế độ ghi ('w') nếu không
-#     with open(csv_filename, 'a' if csv_file_exists else 'w', newline='', encoding='utf-8') as csvfile:
-#         csvwriter = csv.writer(csvfile)
-
-#         # Ghi tiêu đề vào CSV nếu tệp không tồn tại
-#         if not csv_file_exists:
-#             csvwriter.writerow(['Number'] + data_header)
-
-#         for row in rows:
-#             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
-#             data_row = []
-#             data_row.append(number)
-#             number += 1
-#             for col in cols:
-#                 try:
-#                     actions = ActionChains(driver)
-#                     actions.move_to_element(col).perform()
-#                     text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
-#                     data_row.append(text)
-#                 except Exception as e:
-#                     print(f"Error accessing column: {e}")
-#                     data_row.append("")
-
-#             csvwriter.writerow(data_row)
-#             data_array_all.append(data_row)
-
-#     # Cập nhật tệp JSON
-#     try:
-#         if json_file_exists:
-#             with open(json_filename, 'r', encoding='utf-8') as json_file:
-#                 object_array = json.load(json_file)
-#         else:
-#             object_array = []
-
-#         object_array.extend([{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all])
-
-#         with open(json_filename, 'w', encoding='utf-8') as json_file:
-#             json.dump(object_array, json_file, ensure_ascii=False, indent=4)
-
-#     except Exception as e:
-#         print(f"Lỗi trong quá trình xử lý JSON: {e}")
 # Function to extract table data and save to CSV and JSON
-# def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
-#     base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
-#     # full_path = os.path.join(base_path, folder)
-#     # os.makedirs(full_path, exist_ok=True)  #
-#     csv_filename = os.path.join(base_path, csv_filename)
-#     json_filename = os.path.join(base_path, json_filename)
-#     listbody_div = WebDriverWait(driver, 10).until(
-#             EC.presence_of_element_located((By.ID, 'lstMain-body'))
-#     )
-#     table = listbody_div.find_element(By.TAG_NAME, 'table')
-#     tbodys = table.find_elements(By.TAG_NAME, "tbody")
-#     rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
+def extract_and_save_table_data_TuiMau(driver, data_header, csv_filename, json_filename):
+    base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
+    # full_path = os.path.join(base_path, folder)
+    # os.makedirs(full_path, exist_ok=True)  #
+    csv_filename = os.path.join(base_path, csv_filename)
+    json_filename = os.path.join(base_path, json_filename)
+    listbody_div = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'lstMain-body'))
+    )
+    table = listbody_div.find_element(By.TAG_NAME, 'table')
+    tbodys = table.find_elements(By.TAG_NAME, "tbody")
+    rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
 
-#     data_array_all = []
-#     number = 1
-#     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-#         csvwriter = csv.writer(csvfile)
+    data_array_all = []
+    number = 1
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
+        csvwriter = csv.writer(csvfile)
         
-#         for row in rows:
-#             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
-#             data_row = []
-#             # data_row.append(number)
-#             # number += 1
-#             for col in cols:
-#                 try:
-#                     actions = ActionChains(driver)
-#                     actions.move_to_element(col).perform()
-#                     text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
-#                     data_row.append(text)
-#                 except Exception as e:
-#                     print(f"Error accessing column: {e}")
-#                     data_row.append("")
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, 'td')[1:]
+            data_row = []
+            # data_row.append(number)
+            # number += 1
+            for col in cols:
+                try:
+                    actions = ActionChains(driver)
+                    actions.move_to_element(col).perform()
+                    text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+                    data_row.append(text)
+                except Exception as e:
+                    print(f"Error accessing column: {e}")
+                    data_row.append("")
 
-#             csvwriter.writerow(data_row)
-#             data_array_all.append(data_row)
+            csvwriter.writerow(data_row)
+            data_array_all.append(data_row)
 
-#     object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
+    object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
 
-#     with open(json_filename, 'w', encoding='utf-8') as json_file:
-#         json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+    with open(json_filename, 'w', encoding='utf-8') as json_file:
+        json.dump(object_array, json_file, ensure_ascii=False, indent=4)
 # new code funtction
 def extract_and_save_table_data(driver, data_header, csv_filename, json_filename, folder):
     base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
     full_path = os.path.join(base_path, folder)
     os.makedirs(full_path, exist_ok=True)  # Tạo thư mục nếu nó không tồn tại
 
-    csv_filename = os.path.join(base_path, csv_filename)
-    json_filename = os.path.join(base_path, json_filename)
-    time.sleep(4)
+    csv_filename = os.path.join(full_path, csv_filename)
+    json_filename = os.path.join(full_path, json_filename)
+    time.sleep(1)
     def locate_table():
         listbody_div = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'lstMain-body'))
@@ -490,14 +459,14 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
         return tbodys[1].find_elements(By.TAG_NAME, 'tr')
 
     data_array_all = []
-    number = 1
+    number = 0
     def get_row_data():
         rows = locate_table()
         data_array = []
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
             data_row = []
-            print(f"==doi tuong dau tien{number}===")
+            print(f"==doi tuong dau tien{number + 1}===")
             for col in cols:
                 retry_count = 3
                 numberofcol = 1
@@ -507,16 +476,19 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
                         actions.move_to_element(col).perform()
                         text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
                         # Đợi và lấy thẻ <i> nếu tồn tại bên trong col
+                        checkstatus = ""
                         try:
                             icon_element = WebDriverWait(col, 2).until(
                                 EC.presence_of_element_located((By.TAG_NAME, "i"))
                             )
                             icon_html = icon_element.get_attribute('outerHTML')
                             print(f"Icon HTML in column {numberofcol}: {icon_html}")
+                            checkstatus = "True"
                         except:
                             print(f"No <i> element found in column {numberofcol}")
-                        print(f"thuoc {numberofcol}:{text}")
-                        numberofcol += 1
+                        if checkstatus == "True":
+                           text = "True" 
+                        print(f"thuoc {numberofcol + 1}:{text}")
                         data_row.append(text)
                         break
                     except StaleElementReferenceException:
@@ -550,9 +522,16 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
         first_row = locate_table()[0]
         actions = ActionChains(driver)
         actions.move_to_element(first_row).perform()
+        print("======HOAN TAT=======")
+        print("======tien hanh qua trinh tai du lieu ve database======")
     except Exception as e:
         print(f"Lỗi khi di chuyển về đầu bảng: {e}")
-        
+    try: 
+        json_String = json.dumps(object_array)
+        print(json_String)
+        call_api_import(json_String,"http://localhost:3000/ImportDataLoMau")
+    except Exception as e:
+        print(f"lỗi khi gửi dữ liệu về server: {e}")
 # Main function to run the script
 def main(type,date1,date2):
     try:     
