@@ -25,12 +25,20 @@ from tkcalendar import DateEntry
 
 def call_api_import(datapost,urls):
     url = urls
-   
+    print(datapost)
+    
+    dataapitest = [{
+         "Sobienlai": "1825",
+         "Nhacungcap": "BV Truy",
+         "PhiVC": "True",
+         "NgayHD": "31/01/2023"
+    }]
+    
     headers = {
         "Content-Type": "application/json"
     }
 
-    response = requests.post(url, json=datapost)
+    response = requests.post(url, json=datapost,headers=headers)
 
     if response.status_code == 200:
         data = response.json()
@@ -362,7 +370,7 @@ def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
     driver.get(url)
     time.sleep(2)
     set_date2(driver, "dbFrom","01/01/2023")
-    set_date2(driver, "dbTo", "31/01/2023")
+    set_date2(driver, "dbTo", "30/04/2023")
  
     click_search_button(driver,csvfile,jsonfile)
     # check_and_click_page(driver)
@@ -441,6 +449,8 @@ def extract_and_save_table_data_TuiMau(driver, data_header, csv_filename, json_f
 
     with open(json_filename, 'w', encoding='utf-8') as json_file:
         json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+#new function
+
 # new code funtction
 def extract_and_save_table_data(driver, data_header, csv_filename, json_filename, folder):
     base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
@@ -458,37 +468,29 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
         tbodys = table.find_elements(By.TAG_NAME, "tbody")
         return tbodys[1].find_elements(By.TAG_NAME, 'tr')
 
-    data_array_all = []
-    number = 0
     def get_row_data():
         rows = locate_table()
         data_array = []
+        number = 1
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
             data_row = []
-            print(f"==doi tuong dau tien{number + 1}===")
+            print(f"===đối tượng đầu tiên {number}===")
+            number += 1
             for col in cols:
-                retry_count = 3
-                numberofcol = 1
+                retry_count = 1
                 while retry_count > 0:
                     try:
                         actions = ActionChains(driver)
                         actions.move_to_element(col).perform()
                         text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
-                        # Đợi và lấy thẻ <i> nếu tồn tại bên trong col
-                        checkstatus = ""
                         try:
-                            icon_element = WebDriverWait(col, 2).until(
-                                EC.presence_of_element_located((By.TAG_NAME, "i"))
-                            )
+                            icon_element = col.find_element(By.TAG_NAME, "i")
                             icon_html = icon_element.get_attribute('outerHTML')
-                            print(f"Icon HTML in column {numberofcol}: {icon_html}")
-                            checkstatus = "True"
+                            text = "True"
                         except:
-                            print(f"No <i> element found in column {numberofcol}")
-                        if checkstatus == "True":
-                           text = "True" 
-                        print(f"thuoc {numberofcol + 1}:{text}")
+                            pass
+                        print(f"nhánh {len(data_row)}: {text}")
                         data_row.append(text)
                         break
                     except StaleElementReferenceException:
@@ -497,17 +499,16 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
                             print(f"Lỗi khi truy cập cột sau {3 - retry_count} lần thử")
                             data_row.append("")
                         else:
-                            print("vo roi ne")
-                            time.sleep(3)
+                            print("Vào rồi nè")
+                            time.sleep(0.5)
                             rows = locate_table()  # Định vị lại các hàng trong bảng
-                            # col = rows[rows.index(row)].find_elements(By.TAG_NAME, 'td')[1:][cols.index(col)]
-                            time.sleep(3)
+                            time.sleep(0.5)
             print("===============================")
             data_array.append(data_row)
         return data_array
 
     data_array_all = get_row_data()
-
+    
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
         for data_row in data_array_all:
@@ -515,8 +516,13 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
 
     object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
 
+    # Sử dụng session để gọi API một lần
+    call_api_import(object_array, "http://localhost:3000/ImportDataLoMau")
+    
     with open(json_filename, 'w', encoding='utf-8') as json_file:
         json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+    
+    print("======HOÀN TẤT=======")
      # Di chuyển về đầu bảng
     try:
         first_row = locate_table()[0]
@@ -526,12 +532,12 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
         print("======tien hanh qua trinh tai du lieu ve database======")
     except Exception as e:
         print(f"Lỗi khi di chuyển về đầu bảng: {e}")
-    try: 
-        json_String = json.dumps(object_array)
-        print(json_String)
-        call_api_import(json_String,"http://localhost:3000/ImportDataLoMau")
-    except Exception as e:
-        print(f"lỗi khi gửi dữ liệu về server: {e}")
+    # try: 
+    #     json_String = json.dumps(object_array)
+    #     print(json_String)
+    #     call_api_import(json_String,"http://localhost:3000/ImportDataLoMau")
+    # except Exception as e:
+    #     print(f"lỗi khi gửi dữ liệu về server: {e}")
 # Main function to run the script
 def main(type,date1,date2):
     try:     
@@ -553,6 +559,7 @@ def main(type,date1,date2):
 
 
         print(f"Chromedriver path: {chromedriver_path}")
+        # call_api_import("http://localhost:3000/ImportDataLoMau")
         # Initialize and log into the system
         driver = login(chromedriver_path, login_url, username, password)
         if not driver:
