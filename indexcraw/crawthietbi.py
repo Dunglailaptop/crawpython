@@ -18,7 +18,7 @@ import unicodedata
 import re
 from unidecode import unidecode 
 from tkinter import ttk, filedialog, Tk
-import datetime
+from datetime import datetime
 from tkinter import *
 from tkcalendar import DateEntry
 
@@ -77,10 +77,10 @@ def login(chromedriver_path, url, username, password):
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
         service = Service(chromedriver_path)
         driver = webdriver.Chrome(service=service,options=options)
 
@@ -323,56 +323,64 @@ def click_next(driver):
     if getclick.get_attribute('disabled') == None:
        getclick.click()
 
-def click_search_button(driver,csvfile,jsonfile):
+def click_search_button(driver, csvfile, jsonfile, type):
     try:
-        menu_crud = driver.find_element(By.ID,"menuCrud")
+        if type == 1:
+            menu_crud = driver.find_element(By.ID, "menuCrud")
+            btn_search = menu_crud.find_element(By.ID, "btnSearch")
+            btn_search.click()
+            time.sleep(5)
+        elif type == 2:
+            # Các bước xử lý cụ thể cho type == 2
+            print("không in chọn tìm kiếm - Type 2")
+            menu_crud = driver.find_element(By.ID, "menuCrudType2")
+            btn_search = menu_crud.find_element(By.ID, "btnSearchType2")
+            btn_search.click()
+            time.sleep(5)
+        elif type == 3:
+            print("không in chọn tìm kiếm - Type 3")
         
-        # Tìm thẻ span với id "btnSearch" bên trong menuCrud
-        btn_search = menu_crud.find_element(By.ID, "btnSearch")
-        
-        # Click vào thẻ span
-        btn_search.click()
-        
-        time.sleep(5)
         Total = check_and_click_page(driver)
-        # if Total is not None:
-        #     numberpage = Total / 80
-        #     numberpage_rounded = math.ceil(numberpage)
-        #     print(f"Number of pages (rounded up): {numberpage_rounded}")
-        # check_and_click_page_callback(driver)
+        if Total is not None:
+            numberpage = int(Total) / 80
+            numberpage_rounded = math.ceil(numberpage)
+            print(f"Number of pages (rounded up): {numberpage_rounded}")
+        else:
+            print("Total is None, unable to calculate the number of pages.")
+        
         getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
         getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-first")
         print(getclick.get_attribute('outerHTML'))
-        if getclick.get_attribute('disabled') == None:
+        if getclick.get_attribute('disabled') is None:
            getclick.click()
         
-         # Extract header data
         data_header = extract_header_data(driver)
         print(data_header)
-        iterations = 3
+        iterations = numberpage_rounded
+        
         for i in range(iterations):
-          csv_file = f"{i}_{csvfile}"
-          json_file = f"{i}_{jsonfile}"
-          if i > 0:
-            click_next(driver)
-            print(f"Iteration {i + 1}")
-          extract_and_save_table_data(driver, data_header, csv_file, json_file,jsonfile)
-       
-    
-           
-        # Extract table data and save to CSV and JSON
-        # extract_and_save_table_data(driver, data_header, csvfile, jsonfile)
+            csv_file = f"{i}_{csvfile}"
+            json_file = f"{i}_{jsonfile}"
+            if i > 0:
+                click_next(driver)
+                print(f"Iteration {i + 1}")
+            
+            if type == 1 or type == 2:
+                extract_and_save_table_data(driver, data_header, csv_file, json_file)
+            elif type == 3:
+                extract_and_save_table_data_loads(driver, data_header, csv_file, json_file)
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
-def select_area_data(driver, url, date1, date2,csvfile,jsonfile):
+
+def select_area_data(driver, url, date1, date2,csvfile,jsonfile,type):
     driver.get(url)
     time.sleep(2)
     set_date2(driver, "dbFrom","01/01/2023")
     set_date2(driver, "dbTo", "30/04/2023")
  
-    click_search_button(driver,csvfile,jsonfile)
+    click_search_button(driver,csvfile,jsonfile,type)
     # check_and_click_page(driver)
 
     # # # set_date(driver, "dbTo", date2)
@@ -409,46 +417,49 @@ def extract_header_data(driver):
     
 
 # Function to extract table data and save to CSV and JSON
-def extract_and_save_table_data_TuiMau(driver, data_header, csv_filename, json_filename):
-    base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
-    # full_path = os.path.join(base_path, folder)
-    # os.makedirs(full_path, exist_ok=True)  #
-    csv_filename = os.path.join(base_path, csv_filename)
-    json_filename = os.path.join(base_path, json_filename)
-    listbody_div = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'lstMain-body'))
-    )
-    table = listbody_div.find_element(By.TAG_NAME, 'table')
-    tbodys = table.find_elements(By.TAG_NAME, "tbody")
-    rows = tbodys[1].find_elements(By.TAG_NAME, 'tr')
+def clean_price(price_str):
+    return float(re.sub(r'[^\d.]', '', price_str))
 
-    data_array_all = []
-    number = 1
+def parse_date(date_str):
+    return datetime.strptime(date_str, "%d/%m/%Y").isoformat()
+
+def extract_and_save_table_data_loads(driver, data_header, csv_filename, json_filename):
+    base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
+    full_path = os.path.join(base_path, json_filename)
+    os.makedirs(full_path, exist_ok=True)
+    csv_filename = os.path.join(full_path, csv_filename)
+    json_filename = os.path.join(full_path, json_filename)
+
+    # Sử dụng JavaScript để lấy dữ liệu bảng
+    script = """
+    var table = document.querySelector('#lstMain-body table');
+    var rows = table.querySelectorAll('tbody:nth-child(2) tr');
+    return Array.from(rows).map(row => 
+        Array.from(row.querySelectorAll('td')).slice(1).map(td => td.textContent.trim())
+    );
+    """
+    data_array_all = driver.execute_script(script)
+
+    print("===== Dữ liệu đã trích xuất =====")
+    for i, row in enumerate(data_array_all, 1):
+        print(f"\n=== Dòng {i} ===")
+        for j, value in enumerate(row):
+            print(f"{data_header[j]}: {value}")
+
+    # Ghi CSV
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
-        
-        for row in rows:
-            cols = row.find_elements(By.TAG_NAME, 'td')[1:]
-            data_row = []
-            # data_row.append(number)
-            # number += 1
-            for col in cols:
-                try:
-                    actions = ActionChains(driver)
-                    actions.move_to_element(col).perform()
-                    text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
-                    data_row.append(text)
-                except Exception as e:
-                    print(f"Error accessing column: {e}")
-                    data_row.append("")
+        csvwriter.writerows(data_array_all)
 
-            csvwriter.writerow(data_row)
-            data_array_all.append(data_row)
-
+    # Tạo object array
     object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
 
+    # Ghi JSON
     with open(json_filename, 'w', encoding='utf-8') as json_file:
         json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+    print(object_array)
+    print("\n===== Hoàn tất hủy diệt dữ liệu =====")
+    call_api_import(json.dumps(object_array), "http://localhost:3000/dataToInsert")
 #new function
 
 # new code funtction
@@ -556,8 +567,10 @@ def main(type,date1,date2):
             area_data_url = "http://192.168.0.65:8180/#menu=292&action=547"
             csv_filename = 'TuiMau.csv'
             json_filename = 'TuiMau.json'
-
-
+        elif type == 3:
+            area_data_url = "http://192.168.0.65:8180/#menu=305&action=559"
+            csv_filename = 'DanhMucMau.csv'
+            json_filename = 'DanhMucMau.json'
         print(f"Chromedriver path: {chromedriver_path}")
         # call_api_import("http://localhost:3000/ImportDataLoMau")
         # Initialize and log into the system
@@ -566,7 +579,7 @@ def main(type,date1,date2):
             print("Failed to initialize the web driver.")
             return
         # Select area data
-        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename)
+        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename,type)
         # Wait for a while before closing the browser
         time.sleep(10)
         # Close the browser
@@ -622,7 +635,7 @@ def khoitaoapp():
     item_to_number = {
         "Lô Máu": 1,
         "Túi Máu": 2,
-        "Cấu Hình": 3
+        "Danh Mục Máu": 3
     }
     date1 = ''
     date2 = ''
