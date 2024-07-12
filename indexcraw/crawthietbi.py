@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 import time
 import csv
 import json
@@ -22,16 +22,48 @@ from datetime import datetime
 from tkinter import *
 from tkcalendar import DateEntry
 
+def call_api_import_size(datapost, urls, chunk_size=100):
+    url = urls
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    # Chia nhỏ dữ liệu thành các chunk
+    for i in range(0, len(datapost), chunk_size):
+        chunk = datapost[i:i+chunk_size]
+        
+        print(f"Sending chunk {i//chunk_size + 1} (size: {len(chunk)})")
+        
+        try:
+            response = requests.post(url, json=chunk, headers=headers)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Chunk {i//chunk_size + 1} imported successfully.")
+                print(json.dumps(data, indent=2))
+            else:
+                print(f"Chunk {i//chunk_size + 1} failed with status code: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Error importing chunk {i//chunk_size + 1}: {e}")
+    
+    print("All data chunks have been processed.")
 
 def call_api_import(datapost,urls):
     url = urls
     print(datapost)
     
     dataapitest = [{
-         "Sobienlai": "1825",
-         "Nhacungcap": "BV Truy",
-         "PhiVC": "True",
-         "NgayHD": "31/01/2023"
+        "ID": "56181185",
+        "Ma": "KTC01",
+        "Ten": "T\u00fai Ti\u1ec3u C\u1ea7u [40ml]",
+        "Tenviettat": "T\u00fai Ti\u1ec3u C\u1ea7u [40ml]",
+        "Loai": "M\u00e1u",
+        "Thetich": "40 ml",
+        "Gia": "449,167 \u20ab",
+        "Ngaytao": "20/05/2022",
+        "Uutien": "0"
     }]
     
     headers = {
@@ -77,10 +109,13 @@ def login(chromedriver_path, url, username, password):
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--start-maximized")
         options.add_argument("--disable-gpu")
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36")
         service = Service(chromedriver_path)
         driver = webdriver.Chrome(service=service,options=options)
 
@@ -323,7 +358,7 @@ def click_next(driver):
     if getclick.get_attribute('disabled') == None:
        getclick.click()
 
-def click_search_button(driver, csvfile, jsonfile, type):
+def click_search_button(driver, csvfile, jsonfile, type,url):
     try:
         if type == 1:
             menu_crud = driver.find_element(By.ID, "menuCrud")
@@ -367,20 +402,20 @@ def click_search_button(driver, csvfile, jsonfile, type):
             
             if type == 1 or type == 2:
                 extract_and_save_table_data(driver, data_header, csv_file, json_file)
-            elif type == 3:
-                extract_and_save_table_data_loads(driver, data_header, csv_file, json_file)
+            elif type >= 3:
+                extract_and_save_table_data_loads(driver, data_header, csv_file, json_file,url)
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
 
-def select_area_data(driver, url, date1, date2,csvfile,jsonfile,type):
+def select_area_data(driver, url, date1, date2,csvfile,jsonfile,type,urls):
     driver.get(url)
     time.sleep(2)
     set_date2(driver, "dbFrom","01/01/2023")
-    set_date2(driver, "dbTo", "30/04/2023")
+    set_date2(driver, "dbTo", "15/01/2023")
  
-    click_search_button(driver,csvfile,jsonfile,type)
+    click_search_button(driver,csvfile,jsonfile,type,urls)
     # check_and_click_page(driver)
 
     # # # set_date(driver, "dbTo", date2)
@@ -423,20 +458,36 @@ def clean_price(price_str):
 def parse_date(date_str):
     return datetime.strptime(date_str, "%d/%m/%Y").isoformat()
 
-def extract_and_save_table_data_loads(driver, data_header, csv_filename, json_filename):
+def extract_and_save_table_data_loads(driver, data_header, csv_filename, json_filename, url):
     base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
     full_path = os.path.join(base_path, json_filename)
     os.makedirs(full_path, exist_ok=True)
     csv_filename = os.path.join(full_path, csv_filename)
     json_filename = os.path.join(full_path, json_filename)
 
+    # Kiểm tra sự tồn tại của thẻ <sup>
+    script_check_sup = """
+    var supElement = document.querySelector('#lstMain-body table sup');
+    return supElement ? supElement.textContent.trim() : null;
+    """
+    sup_content = driver.execute_script(script_check_sup)
+    
+    if sup_content:
+        data_header.append('sup')
+
     # Sử dụng JavaScript để lấy dữ liệu bảng
     script = """
     var table = document.querySelector('#lstMain-body table');
     var rows = table.querySelectorAll('tbody:nth-child(2) tr');
-    return Array.from(rows).map(row => 
-        Array.from(row.querySelectorAll('td')).slice(1).map(td => td.textContent.trim())
-    );
+    return Array.from(rows).map(row => {
+        var cells = Array.from(row.querySelectorAll('td')).slice(1);
+        var cellData = cells.map(td => td.textContent.trim());
+        var supElement = row.querySelector('sup');
+        if (supElement) {
+            cellData.push(supElement.textContent.trim());
+        }
+        return cellData;
+    });
     """
     data_array_all = driver.execute_script(script)
 
@@ -444,11 +495,13 @@ def extract_and_save_table_data_loads(driver, data_header, csv_filename, json_fi
     for i, row in enumerate(data_array_all, 1):
         print(f"\n=== Dòng {i} ===")
         for j, value in enumerate(row):
-            print(f"{data_header[j]}: {value}")
+            if j < len(data_header):
+                print(f"{data_header[j]}: {value}")
 
     # Ghi CSV
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(data_header)
         csvwriter.writerows(data_array_all)
 
     # Tạo object array
@@ -457,20 +510,39 @@ def extract_and_save_table_data_loads(driver, data_header, csv_filename, json_fi
     # Ghi JSON
     with open(json_filename, 'w', encoding='utf-8') as json_file:
         json.dump(object_array, json_file, ensure_ascii=False, indent=4)
-    print(object_array)
+    print(json.dumps(object_array))
     print("\n===== Hoàn tất hủy diệt dữ liệu =====")
-    call_api_import(json.dumps(object_array), "http://localhost:3000/dataToInsert")
+    call_api_import(object_array, url)
 #new function
 
 # new code funtction
-def extract_and_save_table_data(driver, data_header, csv_filename, json_filename, folder):
+def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
     base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
-    full_path = os.path.join(base_path, folder)
-    os.makedirs(full_path, exist_ok=True)  # Tạo thư mục nếu nó không tồn tại
+    full_path = os.path.join(base_path, json_filename)
+    os.makedirs(full_path, exist_ok=True)
 
     csv_filename = os.path.join(full_path, csv_filename)
     json_filename = os.path.join(full_path, json_filename)
+    process_edit_csv = os.path.join(full_path, 'process_edit_data.csv')
+    process_edit_json = os.path.join(full_path, 'process_edit_data.json')
+    
+     # Kiểm tra sự tồn tại của các file
+    files_to_check = [csv_filename, json_filename, process_edit_csv, process_edit_json]
+    existing_files = [f for f in files_to_check if os.path.exists(f)]
+    
+    if existing_files:
+        print("Các file sau đã tồn tại:")
+        for file in existing_files:
+            print(f"- {file}")
+        
+        overwrite = input("Bạn có muốn ghi đè lên các file này không? (y/n): ").lower().strip()
+        if overwrite != 'y':
+            print("Hủy thao tác ghi file.")
+            return
+
+    
     time.sleep(1)
+
     def locate_table():
         listbody_div = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'lstMain-body'))
@@ -482,12 +554,29 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
     def get_row_data():
         rows = locate_table()
         data_array = []
+        process_edit_data = []
         number = 1
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, 'td')[1:]
             data_row = []
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
+            
+            # Get the first column data (assuming it's the ID or unique identifier)
+            first_col_data = cols[0].text if cols else ""
+            
+            # Click vào row
+            try:
+                row.click()
+                time.sleep(1)  # Đợi để trang load
+            except Exception as e:
+                print(f"Không thể click vào row: {e}")
+            
+            # Kiểm tra và lấy dữ liệu từ processEdit
+            current_process_edit_data = get_process_edit_data(driver, first_col_data)
+            if current_process_edit_data:
+                process_edit_data.extend(current_process_edit_data)
+            
             for col in cols:
                 retry_count = 1
                 while retry_count > 0:
@@ -512,29 +601,113 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
                         else:
                             print("Vào rồi nè")
                             time.sleep(0.5)
-                            rows = locate_table()  # Định vị lại các hàng trong bảng
+                            rows = locate_table()
                             time.sleep(0.5)
             print("===============================")
             data_array.append(data_row)
-        return data_array
-
-    data_array_all = get_row_data()
+        return data_array, process_edit_data
     
+    
+    def extract_header_data(driver):
+        try:
+            # Locate the processEdit div by its id
+            listbody_div_header = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#processEdit #lstMain-head"))
+            )
+            # Find the table within the header div
+            table_header = listbody_div_header.find_element(By.TAG_NAME, 'table')
+            # Get all tbody elements within the table
+            tbody_header = table_header.find_elements(By.TAG_NAME, "tbody")
+            # Extract rows from the first tbody
+            rows = tbody_header[0].find_elements(By.TAG_NAME, "tr")
+            # Process each header column text
+            data_header = [process_text(col.text) for row in rows for col in row.find_elements(By.TAG_NAME, "th")[1:]]
+            return data_header
+        except TimeoutException:
+            print("Không tìm thấy hoặc không thể truy cập processEdit")
+            return None
+
+    def get_process_edit_data(driver, first_col_data):
+        try:
+            data_header = extract_header_data(driver)
+            if not data_header:
+                print("Không thể lấy dữ liệu tiêu đề bảng.")
+                return None
+            
+            # Sử dụng JavaScript để lấy dữ liệu bảng
+            script = """
+            var table = document.querySelector('#processEdit #lstMain-body table');
+            var rows = table.querySelectorAll('tbody:nth-child(2) tr');
+            return Array.from(rows).map(row => {
+                var cells = Array.from(row.querySelectorAll('td')).slice(1);
+                return cells.map(td => td.textContent.trim());
+            });
+            """
+            data_rows = driver.execute_script(script)
+
+            # Thêm "MaBienLai" vào đầu data_header
+            data_header.insert(0, "MaBienLai")
+
+            # Tạo danh sách các dictionary, mỗi dictionary đại diện cho một hàng
+            json_data = []
+            for row in data_rows:
+                row_dict = {"MaBienLai": first_col_data}
+                for i, value in enumerate(row):
+                    if i + 1 < len(data_header):  # +1 vì đã thêm "MaBienLai" vào đầu
+                        row_dict[data_header[i + 1]] = value
+                json_data.append(row_dict)
+
+            print(f"===== Dữ liệu trong row được trích xuất {first_col_data} =====")
+            print("\n=== Header ===")
+            print(json.dumps(data_header, ensure_ascii=False, indent=2))
+            
+            for i, row in enumerate(json_data):
+                print(f"\n=== Dòng {i + 1} ===")
+                print(json.dumps(row, ensure_ascii=False, indent=2))
+
+            return json_data
+        except TimeoutException:
+            print("Không tìm thấy hoặc không thể truy cập processEdit")
+            return None
+
+
+    data_array_all, process_edit_data_all = get_row_data()
+    object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
+    # Lưu dữ liệu chính
+    print("Đang ghi file...")
+    
+    # Ghi dữ liệu chính
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
         for data_row in data_array_all:
             csvwriter.writerow(data_row)
+    print(f"Đã ghi file {csv_filename}")
 
-    object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
-
-    # Sử dụng session để gọi API một lần
-    call_api_import(object_array, "http://localhost:3000/ImportDataLoMau")
-    
     with open(json_filename, 'w', encoding='utf-8') as json_file:
         json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+    print(f"Đã ghi file {json_filename}")
+
+    print("goi api========")
+    # Sử dụng session để gọi API một lần
+    call_api_import(object_array, "http://localhost:3000/ImportDataLoMau")
+  
+    
+     # Ghi dữ liệu processEdit
+    if process_edit_data_all:
+        with open(process_edit_csv, 'w', newline='', encoding='utf-8') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for data_row in process_edit_data_all:
+                csvwriter.writerow(data_row)
+        print(f"Đã ghi file {process_edit_csv}")
+        
+        with open(process_edit_json, 'w', encoding='utf-8') as json_file:
+            json.dump(process_edit_data_all, json_file, ensure_ascii=False, indent=4)
+        print(f"Đã ghi file {process_edit_json}")
+        call_api_import(process_edit_data_all,"http://localhost:3000/ImportDataLoMau")
+    
+    print("======HOÀN TẤT GHI FILE=======")
     
     print("======HOÀN TẤT=======")
-     # Di chuyển về đầu bảng
     try:
         first_row = locate_table()[0]
         actions = ActionChains(driver)
@@ -559,6 +732,7 @@ def main(type,date1,date2):
         password = "74777477"
         csv_filename = ''
         json_filename = ''
+        urls = ""
         if type == 1:
             area_data_url = "http://192.168.0.65:8180/#menu=291&action=557"
             csv_filename = 'LoMau.csv'
@@ -571,6 +745,32 @@ def main(type,date1,date2):
             area_data_url = "http://192.168.0.65:8180/#menu=305&action=559"
             csv_filename = 'DanhMucMau.csv'
             json_filename = 'DanhMucMau.json'
+            urls = 'http://localhost:3000/ImportDanhMucMau'
+        elif type == 4:
+            area_data_url = "http://192.168.0.65:8180/#menu=304&action=548"
+            csv_filename = 'LoaiChePham.csv'
+            json_filename = 'LoaiChePham.json'
+            urls = "http://localhost:3000/ImportLeChePham"
+        elif type == 5:
+            area_data_url = "http://192.168.0.65:8180/#menu=318&action=581"
+            csv_filename = 'NhomMauTheoISBT.csv'
+            json_filename = 'NhomMauTheoISBT.json'
+            urls = "http://localhost:3000/ImportNhomMauTheoISBT"
+        elif type == 6:
+            area_data_url = "http://192.168.0.65:8180/#menu=332&action=600"
+            csv_filename = 'MaSanPhamTheoISBT.csv'
+            json_filename = 'MaSanPhamTheoISBT.json'
+            urls = "http://localhost:3000/ImportMaSanPhamISBT"
+        elif type == 7:
+            area_data_url = "http://192.168.0.65:8180/#menu=306&action=549"
+            csv_filename = 'NhaCungCap.csv'
+            json_filename = 'NhaCungCap.json'
+            urls = "http://localhost:3000/ImportNhaCungCap"
+        elif type == 8:
+            area_data_url = "http://192.168.0.65:8180/#menu=307&action=555"
+            csv_filename = 'KhoMau.csv'
+            json_filename = 'KhoMau.json'
+            urls = "http://localhost:3000/ImportKhoMau"
         print(f"Chromedriver path: {chromedriver_path}")
         # call_api_import("http://localhost:3000/ImportDataLoMau")
         # Initialize and log into the system
@@ -579,7 +779,7 @@ def main(type,date1,date2):
             print("Failed to initialize the web driver.")
             return
         # Select area data
-        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename,type)
+        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename,type,urls)
         # Wait for a while before closing the browser
         time.sleep(10)
         # Close the browser
@@ -635,7 +835,12 @@ def khoitaoapp():
     item_to_number = {
         "Lô Máu": 1,
         "Túi Máu": 2,
-        "Danh Mục Máu": 3
+        "Danh Mục Máu": 3,
+        "Loại Chế Phẩm": 4,
+        "NhomSanPhamISBT": 5,
+        "MaSanPhamISBT": 6,
+        "NhaCungCap": 7,
+        "Kho": 8
     }
     date1 = ''
     date2 = ''
