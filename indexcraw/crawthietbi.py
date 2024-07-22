@@ -1,6 +1,30 @@
-import os
-import math
-import requests
+# import os
+# import math
+# import requests
+# from selenium import webdriver
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.common.action_chains import ActionChains
+# from selenium.webdriver.chrome.service import Service
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.support.ui import Select
+# from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+# from PIL import Image
+# from unidecode import unidecode 
+# from tkinter import ttk, filedialog, Tk
+# from datetime import datetime
+# from tkinter import *
+# from tkcalendar import DateEntry
+# import time
+# import csv
+# import json
+# import unicodedata
+# import re
+# import requests
+# import io
+
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,43 +35,55 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-import time
-import csv
-import json
-import unicodedata
-import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from unidecode import unidecode 
 from tkinter import ttk, filedialog, Tk
 from datetime import datetime
 from tkinter import *
 from tkcalendar import DateEntry
+import math
+import time
+import csv
+import json
+import unicodedata
+import re
+import requests
+import io
+import os
+from PIL import Image
+import numpy as np
 
-def call_api_import_size(datapost, urls, chunk_size=100):
-    url = urls
+
+
+def call_api_import_size(json_file_path, url, chunk_size=100):
+    with open(json_file_path, 'r', encoding='utf-8', errors='ignore') as file:
+        data = json.load(file)
+
     headers = {
         "Content-Type": "application/json"
     }
 
-    # Chia nhỏ dữ liệu thành các chunk
-    for i in range(0, len(datapost), chunk_size):
-        chunk = datapost[i:i+chunk_size]
-        
-        print(f"Sending chunk {i//chunk_size + 1} (size: {len(chunk)})")
-        
+    def import_chunk(chunk):
         try:
             response = requests.post(url, json=chunk, headers=headers)
-            response.raise_for_status()  # Raise an exception for bad status codes
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"Chunk {i//chunk_size + 1} imported successfully.")
-                print(json.dumps(data, indent=2))
-            else:
-                print(f"Chunk {i//chunk_size + 1} failed with status code: {response.status_code}")
-                
+            response.raise_for_status()
+            return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error importing chunk {i//chunk_size + 1}: {e}")
-    
+            print(f"Error importing chunk: {e}")
+            return None
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = []
+        for i in range(0, len(data), chunk_size):
+            chunk = data[i:i+chunk_size]
+            print(f"Sending chunk {i//chunk_size + 1} (size: {len(chunk)})")
+            futures.append(executor.submit(import_chunk, chunk))
+
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                print(json.dumps(result, indent=2))
+
     print("All data chunks have been processed.")
 
 def call_api_import(datapost,urls):
@@ -109,13 +145,23 @@ def login(chromedriver_path, url, username, password):
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless=new")
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument("--start-maximized")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36")
+        # options.add_argument("--headless=new")
+        # options.add_argument("--window-size=1920,1080")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--disable-extensions")
+        # options.add_argument("--disable-plugins")
+        # options.add_argument("--disable-software-rasterizer")
+        # options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+
+        #     # Thêm các tùy chọn để giảm tải CPU và bộ nhớ
+        # options.add_argument("--no-zygote")
+        # options.add_argument("--single-process")
+        # options.add_argument("--disable-setuid-sandbox")
+        # options.add_argument("--ignore-certificate-errors")
+        # options.add_argument("--disable-accelerated-2d-canvas")
+        # options.add_argument("--disable-gpu-sandbox")
         service = Service(chromedriver_path)
         driver = webdriver.Chrome(service=service,options=options)
 
@@ -392,7 +438,10 @@ def click_search_button(driver, csvfile, jsonfile, type,url):
         data_header = extract_header_data(driver)
         print(data_header)
         iterations = numberpage_rounded
-        
+        #test lay ảnh
+       
+      
+        #
         for i in range(iterations):
             csv_file = f"{i}_{csvfile}"
             json_file = f"{i}_{jsonfile}"
@@ -401,9 +450,11 @@ def click_search_button(driver, csvfile, jsonfile, type,url):
                 print(f"Iteration {i + 1}")
             
             if type == 1 or type == 2:
-                extract_and_save_table_data(driver, data_header, csv_file, json_file)
-            elif type >= 3:
-                extract_and_save_table_data_loads(driver, data_header, csv_file, json_file,url)
+              extract_and_save_table_data(driver, data_header, csv_file, json_file)
+            elif 3 <= type <= 11:
+                extract_and_save_table_data_loads(driver, data_header, csv_file, json_file, url)
+            else:
+                extract_and_save_table_data_loads_cachup(driver, data_header, csv_file, json_file, url)
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
@@ -514,7 +565,186 @@ def extract_and_save_table_data_loads(driver, data_header, csv_filename, json_fi
     print("\n===== Hoàn tất hủy diệt dữ liệu =====")
     call_api_import(object_array, url)
 #new function
+def capture_image(driver, download_path, file_name, numberId):
+    try:
+        # Chụp ảnh toàn màn hình
+        png = driver.get_screenshot_as_png()
+        
+        # Sử dụng PIL để mở ảnh từ dữ liệu PNG
+        im = Image.open(io.BytesIO(png))
 
+        # Tạo đường dẫn đầy đủ cho file
+        folder_path = os.path.join(download_path, str(numberId))
+        full_path = os.path.join(folder_path, file_name)
+
+        # Tạo thư mục nếu chưa tồn tại
+        os.makedirs(folder_path, exist_ok=True)
+
+        # Lưu ảnh
+        im.save(full_path)
+
+        print(f"Đã lưu ảnh: {full_path}")
+        print("success")
+    except Exception as e:
+        print("failed -", str(e))
+
+# craw ca chụp
+def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, json_filename, url):
+    base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
+    full_path = os.path.join(base_path, json_filename)
+    os.makedirs(full_path, exist_ok=True)
+    csv_filename = os.path.join(full_path, csv_filename)
+    json_filename = os.path.join(full_path, json_filename)
+    print("=======lay du lieu ca chup========")
+    time.sleep(1)
+
+    def locate_table():
+        listbody_div = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'lstMain-body'))
+        )
+        table = listbody_div.find_element(By.TAG_NAME, 'table')
+        tbodys = table.find_elements(By.TAG_NAME, "tbody")
+        return tbodys[1].find_elements(By.TAG_NAME, 'tr')
+    
+    def get_series_data(number, numberId):
+        series_data = []
+        checkButton = False
+        # Encontrar todos os elementos com a classe 'series-item'
+        series_items = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.series-item'))
+        )
+
+        for series_item in series_items:
+            series_item.click()
+            # Obter o texto do elemento com a classe 'series-num'
+            series_num = WebDriverWait(series_item, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '.series-num'))
+            )
+            # Lấy giá trị của thẻ 'series-desc'
+            try:
+                series_desc = WebDriverWait(series_item, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, '.series-desc'))
+                ).text
+                Button_NextImage = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(By.CSS_SELECTOR, '.paging')
+                )
+                checkButton = True
+            except:
+                series_desc = ''
+                checkButton = False
+
+            # Chụp ảnh và lưu vào thư mục
+            if checkButton == True:
+                for i in range(int(series_num.text)):
+                    capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
+                                f"saved_image_{number}_{i}.png", numberId)
+                    time.sleep(3)
+                    series_num.click()
+
+            series_data.append({
+                "series_num": series_num.text,
+                "series_desc": series_desc
+            })
+
+        return series_data
+
+    def getData_Image(cols, number, numberId):
+        # Get the first column data (assuming it's the ID or unique identifier)
+        cols[0].click()
+        time.sleep(1)  # Đợi để trang load
+
+        div_Menu = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'menuCrud'))
+        )
+        Button_showImage = div_Menu.find_element(By.ID, 'btnWebViewer')
+        Button_showImage.click()
+        time.sleep(1)
+        div_Zoom = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".layout-menu-right button[title='Toàn màn hình']"))
+        )
+        div_Zoom.click()
+        time.sleep(3)
+
+        series_data = get_series_data(number, numberId)
+        # Lưu trữ dữ liệu ảnh ở đây
+        for data in series_data:
+            print(f"Series Number: {data['series_num']}")
+            print(f"Series Number: {data['series_desc']}")
+
+        time.sleep(1)
+        div_ViewImage = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".layout-menu-right button[title='Thu nhỏ (ALT-M)']"))
+        )
+        time.sleep(1)
+        div_ViewImage.click()
+        time.sleep(1)
+        cols[0].click()
+        time.sleep(1)
+        
+    
+    def get_row_data():
+        rows = locate_table()
+        data_array = []
+        process_edit_data = []
+        number = 1
+    
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, 'td')
+            data_row = []
+            print(f"===đối tượng đầu tiên {number}===")
+            number += 1
+            numberIDBenhNhan = ""
+            for col in cols[1:]:
+                retry_count = 1
+                while retry_count > 0:
+                    try:
+                        actions = ActionChains(driver)
+                        actions.move_to_element(col).perform()
+                        text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+                        try:
+                            icon_element = col.find_element(By.TAG_NAME, "i")
+                            icon_html = icon_element.get_attribute('outerHTML')
+                            text = "True"
+                        except:
+                            pass
+                        print(f"nhánh {len(data_row)}: {text}")
+                        if len(data_row) == 0:   
+                           numberIDBenhNhan = text
+                        data_row.append(text)
+                        break
+                    except StaleElementReferenceException:
+                        retry_count -= 1
+                        if retry_count == 0:
+                            print(f"Lỗi khi truy cập cột sau {3 - retry_count} lần thử")
+                            data_row.append("")
+                        else:
+                            print("Vào rồi nè")
+                            time.sleep(0.5)
+                            rows = locate_table()
+                            time.sleep(0.5)
+            print("===============================")
+            data_array.append(data_row)
+            if number <= 10:   
+               getData_Image(cols,number,numberIDBenhNhan)
+        return data_array, process_edit_data
+
+    data_array_all, process_edit_data = get_row_data()
+
+    # Ghi CSV
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(data_header)
+        csvwriter.writerows(data_array_all)
+
+    # Tạo object array
+    object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
+
+    # Ghi JSON
+    with open(json_filename, 'w', encoding='utf-8') as json_file:
+        json.dump(object_array, json_file, ensure_ascii=False, indent=4)
+    print(json.dumps(object_array))
+    print("\n===== Hoàn tất hủy diệt dữ liệu =====")
+    call_api_import(object_array, url)
 # new code funtction
 def extract_and_save_table_data(driver, data_header, csv_filename, json_filename):
     base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
@@ -530,15 +760,15 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
     files_to_check = [csv_filename, json_filename, process_edit_csv, process_edit_json]
     existing_files = [f for f in files_to_check if os.path.exists(f)]
     
-    if existing_files:
-        print("Các file sau đã tồn tại:")
-        for file in existing_files:
-            print(f"- {file}")
+    # if existing_files:
+    #     print("Các file sau đã tồn tại:")
+    #     for file in existing_files:
+    #         print(f"- {file}")
         
-        overwrite = input("Bạn có muốn ghi đè lên các file này không? (y/n): ").lower().strip()
-        if overwrite != 'y':
-            print("Hủy thao tác ghi file.")
-            return
+    #     overwrite = input("Bạn có muốn ghi đè lên các file này không? (y/n): ").lower().strip()
+    #     if overwrite != 'y':
+    #         print("Hủy thao tác ghi file.")
+    #         return
 
     
     time.sleep(1)
@@ -703,7 +933,7 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
         with open(process_edit_json, 'w', encoding='utf-8') as json_file:
             json.dump(process_edit_data_all, json_file, ensure_ascii=False, indent=4)
         print(f"Đã ghi file {process_edit_json}")
-        call_api_import(process_edit_data_all,"http://localhost:3000/ImportDataLoMau")
+        call_api_import_size(process_edit_json,"http://localhost:3000/ImportTuiMau")
     
     print("======HOÀN TẤT GHI FILE=======")
     
@@ -770,6 +1000,11 @@ def main(type,date1,date2):
             area_data_url = "http://192.168.0.65:8180/#menu=307&action=555"
             csv_filename = 'KhoMau.csv'
             json_filename = 'KhoMau.json'
+            urls = "http://localhost:3000/ImportKhoMau"
+        elif type == 12:
+            area_data_url = "http://192.168.0.65:8180/#menu=131&action=111"
+            csv_filename = 'CaChup.csv'
+            json_filename = 'CaChup.json'
             urls = "http://localhost:3000/ImportKhoMau"
         print(f"Chromedriver path: {chromedriver_path}")
         # call_api_import("http://localhost:3000/ImportDataLoMau")
@@ -840,7 +1075,11 @@ def khoitaoapp():
         "NhomSanPhamISBT": 5,
         "MaSanPhamISBT": 6,
         "NhaCungCap": 7,
-        "Kho": 8
+        "Kho": 8,
+        "Xquang": 9,
+        "CT": 10,
+        "MRI": 11,
+        "CaChup": 12
     }
     date1 = ''
     date2 = ''
