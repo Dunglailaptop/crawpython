@@ -609,41 +609,41 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
     def get_series_data(number, numberId):
         series_data = []
         checkButton = False
-        # Encontrar todos os elementos com a classe 'series-item'
+        # Tìm tất cả các phần tử có class 'series-item'
         series_items = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.series-item'))
         )
-
+        numberSeries_item = 0
         for series_item in series_items:
+            numberSeries_item += 1
             series_item.click()
-            # Obter o texto do elemento com a classe 'series-num'
-            series_num = WebDriverWait(series_item, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.series-num'))
-            )
-            # Lấy giá trị của thẻ 'series-desc'
-            try:
-                series_desc = WebDriverWait(series_item, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, '.series-desc'))
-                ).text
-                Button_NextImage = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located(By.CSS_SELECTOR, '.paging')
-                )
-                checkButton = True
-            except:
-                series_desc = ''
-                checkButton = False
+            time.sleep(3)
+            
+            # Lấy giá trị của thẻ 'ins-length'
+           
+            image_count = int(WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '.ins-length'))
+            ).text)
+            print("in số lượng ảnh:" + str(image_count))
 
             # Chụp ảnh và lưu vào thư mục
-            if checkButton == True:
-                for i in range(int(series_num.text)):
+            if image_count > 1:
+                for i in range(image_count):
                     capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
-                                f"saved_image_{number}_{i}.png", numberId)
+                                f"saved_image_{number}_{i}_{numberSeries_item}.png", numberId)
                     time.sleep(3)
-                    series_num.click()
-
+                    # Nhấn nút chuyển sang ảnh tiếp theo
+                    next_button = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, '.paging .fa-chevron-right'))
+                    )
+                    next_button.click()
+                    time.sleep(3)
+            else:
+                capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
+                            f"saved_image_{number}_0_{numberSeries_item}.png", numberId)
+            
             series_data.append({
-                "series_num": series_num.text,
-                "series_desc": series_desc
+                "image_count": image_count
             })
 
         return series_data
@@ -666,10 +666,7 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
         time.sleep(3)
 
         series_data = get_series_data(number, numberId)
-        # Lưu trữ dữ liệu ảnh ở đây
-        for data in series_data:
-            print(f"Series Number: {data['series_num']}")
-            print(f"Series Number: {data['series_desc']}")
+        # print("tong so luong anh lay dc:"+series_data)
 
         time.sleep(1)
         div_ViewImage = WebDriverWait(driver, 10).until(
