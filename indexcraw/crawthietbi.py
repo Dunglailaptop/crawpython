@@ -41,6 +41,7 @@ from tkinter import ttk, filedialog, Tk
 from datetime import datetime
 from tkinter import *
 from tkcalendar import DateEntry
+import pandas as pd
 import math
 import time
 import csv
@@ -145,15 +146,15 @@ def login(chromedriver_path, url, username, password):
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless=new")
-        # options.add_argument("--window-size=1920,1080")
-        # options.add_argument("--disable-gpu")
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
-        # options.add_argument("--disable-extensions")
-        # options.add_argument("--disable-plugins")
-        # options.add_argument("--disable-software-rasterizer")
-        # options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-plugins")
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
         #     # Thêm các tùy chọn để giảm tải CPU và bộ nhớ
         # options.add_argument("--no-zygote")
@@ -404,7 +405,7 @@ def click_next(driver):
     if getclick.get_attribute('disabled') == None:
        getclick.click()
 
-def click_search_button(driver, csvfile, jsonfile, type,url):
+def click_search_button(driver, csvfile, jsonfile, type,url,urlsCsvFile):
     try:
         if type == 1:
             menu_crud = driver.find_element(By.ID, "menuCrud")
@@ -454,19 +455,19 @@ def click_search_button(driver, csvfile, jsonfile, type,url):
             elif 3 <= type <= 11:
                 extract_and_save_table_data_loads(driver, data_header, csv_file, json_file, url)
             else:
-                extract_and_save_table_data_loads_cachup(driver, data_header, csv_file, json_file, url)
+                extract_and_save_table_data_loads_cachup(driver, data_header, csv_file, json_file, url,urlsCsvFile)
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
 
 
-def select_area_data(driver, url, date1, date2,csvfile,jsonfile,type,urls):
+def select_area_data(driver, url, date1, date2,csvfile,jsonfile,type,urls,urlCsvFile):
     driver.get(url)
     time.sleep(2)
     set_date2(driver, "dbFrom","01/01/2023")
     set_date2(driver, "dbTo", "15/01/2023")
  
-    click_search_button(driver,csvfile,jsonfile,type,urls)
+    click_search_button(driver,csvfile,jsonfile,type,urls,urlCsvFile)
     # check_and_click_page(driver)
 
     # # # set_date(driver, "dbTo", date2)
@@ -589,12 +590,12 @@ def capture_image(driver, download_path, file_name, numberId):
         print("failed -", str(e))
 
 # craw ca chụp
-def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, json_filename, url):
-    base_path = r'D:\tool\tooltestdatacanlamsan\ToolTestData\ToolTestData\View\CrawData\Json'
-    full_path = os.path.join(base_path, json_filename)
-    os.makedirs(full_path, exist_ok=True)
-    csv_filename = os.path.join(full_path, csv_filename)
-    json_filename = os.path.join(full_path, json_filename)
+def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, json_filename, url,urlCsvFile):
+    # base_path = urlSaveCsvFile
+    # full_path = os.path.join(base_path, json_filename)
+    # os.makedirs(full_path, exist_ok=True)
+    # csv_filename = os.path.join(full_path, csv_filename)
+    # json_filename = os.path.join(full_path, json_filename)
     print("=======lay du lieu ca chup========")
     time.sleep(1)
 
@@ -617,7 +618,7 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
         for series_item in series_items:
             numberSeries_item += 1
             series_item.click()
-            time.sleep(3)
+            time.sleep(0.5)
             
             # Lấy giá trị của thẻ 'ins-length'
            
@@ -631,13 +632,13 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
                 for i in range(image_count):
                     capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
                                 f"saved_image_{number}_{i}_{numberSeries_item}.png", numberId)
-                    time.sleep(3)
+                    time.sleep(0.5)
                     # Nhấn nút chuyển sang ảnh tiếp theo
                     next_button = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, '.paging .fa-chevron-right'))
                     )
                     next_button.click()
-                    time.sleep(3)
+                    time.sleep(0.5)
             else:
                 capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
                             f"saved_image_{number}_0_{numberSeries_item}.png", numberId)
@@ -651,32 +652,32 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
     def getData_Image(cols, number, numberId):
         # Get the first column data (assuming it's the ID or unique identifier)
         cols[0].click()
-        time.sleep(1)  # Đợi để trang load
+        time.sleep(0.5)  # Đợi để trang load
 
         div_Menu = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'menuCrud'))
         )
         Button_showImage = div_Menu.find_element(By.ID, 'btnWebViewer')
         Button_showImage.click()
-        time.sleep(1)
+        time.sleep(0.5)
         div_Zoom = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".layout-menu-right button[title='Toàn màn hình']"))
         )
         div_Zoom.click()
-        time.sleep(3)
+        time.sleep(0.5)
 
         series_data = get_series_data(number, numberId)
         # print("tong so luong anh lay dc:"+series_data)
 
-        time.sleep(1)
+        time.sleep(0.5)
         div_ViewImage = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".layout-menu-right button[title='Thu nhỏ (ALT-M)']"))
         )
-        time.sleep(1)
+        time.sleep(0.5)
         div_ViewImage.click()
-        time.sleep(1)
+        time.sleep(0.5)
         cols[0].click()
-        time.sleep(1)
+        time.sleep(0.5)
         
     
     def get_row_data():
@@ -684,7 +685,9 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
         data_array = []
         process_edit_data = []
         number = 1
-    
+        
+        csv_filenames = os.path.join(urlCsvFile,csv_filename)
+       
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, 'td')
             data_row = []
@@ -720,6 +723,12 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
                             rows = locate_table()
                             time.sleep(0.5)
             print("===============================")
+            # # Ghi dữ liệu tạm thời vào file CSV
+            with open(csv_filenames, mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.DictWriter(file, fieldnames=data_header)
+                if file.tell() == 0:  # Nếu file rỗng, ghi header
+                    writer.writeheader()
+                writer.writerows([{data_header[i]: data_row[i] for i in range(len(data_header))}])
             data_array.append(data_row)
             if number <= 10:   
                getData_Image(cols,number,numberIDBenhNhan)
@@ -727,11 +736,11 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
 
     data_array_all, process_edit_data = get_row_data()
 
-    # Ghi CSV
-    with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(data_header)
-        csvwriter.writerows(data_array_all)
+    # # Ghi CSV
+    # with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
+    #     csvwriter = csv.writer(csvfile)
+    #     csvwriter.writerow(data_header)
+    #     csvwriter.writerows(data_array_all)
 
     # Tạo object array
     object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
@@ -950,7 +959,7 @@ def extract_and_save_table_data(driver, data_header, csv_filename, json_filename
     # except Exception as e:
     #     print(f"lỗi khi gửi dữ liệu về server: {e}")
 # Main function to run the script
-def main(type,date1,date2):
+def main(type,date1,date2,urlCsvFile):
     try:     
         chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
         login_url = "http://192.168.0.65:8180/"
@@ -1011,7 +1020,7 @@ def main(type,date1,date2):
             print("Failed to initialize the web driver.")
             return
         # Select area data
-        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename,type,urls)
+        select_area_data(driver, area_data_url,date1,date2,csv_filename,json_filename,type,urls,urlCsvFile)
         # Wait for a while before closing the browser
         time.sleep(10)
         # Close the browser
@@ -1023,15 +1032,31 @@ def on_button_click():
     print("Button clicked!")
     
 
-def select_file():
+def select_folder():
+    folder_path = filedialog.askdirectory(
+        title="Select a folder"
+    )
+    if folder_path:
+        print(folder_path)
+        return folder_path
+    else:
+        print("No folder selected.")
+        return None
+
+def select_csv_file(columns_to_read=['Mabenhnhan', 'Chidinh', 'Hinhanh']):
     file_path = filedialog.askopenfilename(
-        title="Select a JSON file",
-        filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+        title="Select a CSV file",
+        filetypes=(("CSV files", "*.csv"), ("All files", "*.*"))
     )
     if file_path:
-        with open(file_path, 'r', encoding='utf-8') as json_file:
-            data = json.load(json_file)
-            print(data)  # Print or process the JSON data as needed
+        try:
+            df = pd.read_csv(file_path, usecols=columns_to_read)
+            print("DataFrame:")
+            print(df)
+        except Exception as e:
+            print(f"Error reading CSV file: {e}")
+    else:
+        print("No file selected.")
 
 
 def get_dates(cal,cal2,number):
@@ -1039,7 +1064,8 @@ def get_dates(cal,cal2,number):
     date2 = cal2.get_date().strftime('%d/%m/%Y')
     print(f"Selected Date 1: {date1}")
     print(f"Selected Date 2: {date2}")
-    main(number,date1,date2)
+    urlSaveCsvFile = select_folder()
+    main(number,date1,date2,urlSaveCsvFile)
     return [date1,date2]
 
 def khoitaoapp():
@@ -1109,9 +1135,12 @@ def khoitaoapp():
     combo.bind("<<ComboboxSelected>>", on_select)
   
 
-    file_button = ttk.Button(root, text="Select File", command=select_file, width=30)  # Corrected here
+    file_button = ttk.Button(root, text="Select File", command=select_folder, width=30)  # Corrected here
     file_button.pack(pady=10)
    #datetime picker
+    #get data json
+    file_button = ttk.Button(root, text="Select csv file", command=select_csv_file, width=30)  # Corrected here
+    file_button.pack(pady=10)
     
     cal = DateEntry(root,selectmode='day')
     cal.pack(pady=10)
@@ -1119,7 +1148,7 @@ def khoitaoapp():
     cal2 = DateEntry(root,selectmode='day')
     cal2.pack(pady=10)
      
-    button = ttk.Button(root, text="Get Dates", command=lambda: get_dates(cal, cal2,numberget[0]))
+    button = ttk.Button(root, text="Get Data", command=lambda: get_dates(cal, cal2,numberget[0]))
     button.pack(pady=10)
     
     # Start the Tkinter event loop
