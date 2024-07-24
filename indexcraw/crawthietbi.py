@@ -596,6 +596,16 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
     # os.makedirs(full_path, exist_ok=True)
     # csv_filename = os.path.join(full_path, csv_filename)
     # json_filename = os.path.join(full_path, json_filename)
+    #=====================================================
+    csv_filenames = os.path.join(urlCsvFile, csv_filename)
+    # Đọc số lượng bản ghi hiện có trong file CSV
+    existing_records = 0
+    if os.path.exists(csv_filenames):
+        with open(csv_filenames, 'r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            existing_records = sum(1 for row in reader) - 1  # Trừ 1 để bỏ qua header
+    print(f"Số bản ghi hiện có: {existing_records}")
+
     print("=======lay du lieu ca chup========")
     time.sleep(1)
 
@@ -684,16 +694,18 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
         rows = locate_table()
         data_array = []
         process_edit_data = []
-        number = 1
+        number = existing_records + 1
         
         csv_filenames = os.path.join(urlCsvFile,csv_filename)
-       
-        for row in rows:
+        
+        for row in rows[existing_records:]:
             cols = row.find_elements(By.TAG_NAME, 'td')
             data_row = []
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
+            if number == 20:
+               return data_array, process_edit_data
             for col in cols[1:]:
                 retry_count = 1
                 while retry_count > 0:
@@ -711,6 +723,8 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
                         if len(data_row) == 0:   
                            numberIDBenhNhan = text
                         data_row.append(text)
+                        
+                        
                         break
                     except StaleElementReferenceException:
                         retry_count -= 1
@@ -730,10 +744,10 @@ def extract_and_save_table_data_loads_cachup(driver, data_header, csv_filename, 
                     writer.writeheader()
                 writer.writerows([{data_header[i]: data_row[i] for i in range(len(data_header))}])
             data_array.append(data_row)
-            if number <= 10:   
-               getData_Image(cols,number,numberIDBenhNhan)
+            # if number <= 10:   
+            #    getData_Image(cols,number,numberIDBenhNhan)
         return data_array, process_edit_data
-
+    
     data_array_all, process_edit_data = get_row_data()
 
     # # Ghi CSV
