@@ -1149,12 +1149,12 @@ def khoitaoapp():
     combo.bind("<<ComboboxSelected>>", on_select)
   
 
-    file_button = ttk.Button(root, text="Select File", command=select_folder, width=30)  # Corrected here
-    file_button.pack(pady=10)
-   #datetime picker
-    #get data json
-    file_button = ttk.Button(root, text="Select csv file", command=select_csv_file, width=30)  # Corrected here
-    file_button.pack(pady=10)
+#     file_button = ttk.Button(root, text="Select File", command=select_folder, width=30)  # Corrected here
+#     file_button.pack(pady=10)
+#    #datetime picker
+#     #get data json
+#     file_button = ttk.Button(root, text="Select csv file", command=select_csv_file, width=30)  # Corrected here
+#     file_button.pack(pady=10)
     
     cal = DateEntry(root,selectmode='day')
     cal.pack(pady=10)
