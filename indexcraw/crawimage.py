@@ -42,6 +42,10 @@ from datetime import datetime
 from tkinter import *
 from tkcalendar import DateEntry
 from tkinter.filedialog import askopenfilename
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import load_workbook
+import pandas as pd
 import openpyxl
 import pandas as pd
 import math
@@ -142,23 +146,32 @@ def process_text(text):
     return text_without_spaces
 
 # Function to initialize and log into the system
-def login(chromedriver_path, url, username, password):
-    try:      
+def login():
+    global dateSelect
+    try:
+        #khai báo thông số     
+        chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
+        login_url = "http://192.168.0.65:8180/"
+        area_data_url = ""
+        username = "quyen.ngoq"
+        password = "74777477"
+        area_data_url = "http://192.168.0.65:8180/#menu=131&action=111"  
+            
         if not os.path.isfile(chromedriver_path):
             raise ValueError(f"The path is not a valid file: {chromedriver_path}")
         
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless=new")
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--disable-plugins")
-        options.add_argument("--disable-software-rasterizer")
-        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        # options.add_argument("--headless=new")
+        # options.add_argument("--window-size=1920,1080")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--disable-extensions")
+        # options.add_argument("--disable-plugins")
+        # options.add_argument("--disable-software-rasterizer")
+        # options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
         #     # Thêm các tùy chọn để giảm tải CPU và bộ nhớ
         # options.add_argument("--no-zygote")
@@ -171,7 +184,7 @@ def login(chromedriver_path, url, username, password):
         driver = webdriver.Chrome(service=service,options=options)
 
         # Open the website
-        driver.get(url)
+        driver.get(login_url)
         driver.maximize_window()
 
         # Wait for the page to load
@@ -196,6 +209,12 @@ def login(chromedriver_path, url, username, password):
         save = driver.find_element(By.ID, "btnSave")
         save.click()
         time.sleep(3)
+        
+        # chọn phân trang tính toán tổng số page
+        driver.get(area_data_url)
+        time.sleep(2)
+        set_date2(driver, "dbFrom",dateSelect)
+        set_date2(driver, "dbTo", dateSelect)
     except Exception as e:
         print(f"Lỗi trong quá trình thực thi chính: {e}")
 
@@ -396,23 +415,45 @@ def click_search_button(driver,urlFolder):
         if getclick.get_attribute('disabled') is None:
            getclick.click()
         
-        data_header = extract_header_data(driver)
+       
         
-        print(data_header)
+      
         iterations = numberpage_rounded
+        success = False
+        number_now = 0
         #doc file csv 
-        
-        
-        #
-        for i in range(iterations):
-            click_next(driver)
-            print(f"Iteration {i + 1}")
-            if i == page:
-               extract_and_save_table_data_loads_cachup(driver, page,data_header, urlFolder) 
-               time.sleep(3)
-               break
-            # if i == page:
-            #     extract_and_save_table_data_loads_cachup(driver, data_header, urlFloderSave ,urlsCsvFile)
+        while not success:
+            if number_now == 20:
+                print("===đang thực hiện login lại===")
+                if driver: 
+                    driver.quit()
+                driver = login()
+            time.sleep(1)
+            current_page = page
+            csv_filenames = ""
+            urlCsvFile = ""
+            formatted_date = ""
+            while current_page < iterations:
+                time.sleep(1)
+                data_header = []
+                data_header = extract_header_data(driver)
+                print(data_header)
+                if current_page == 0:
+                    # Xử lý trang đầu tiên
+                    csv_filenames,urlCsvFile,formatted_date,success,number_now = extract_and_save_table_data_loads_cachup(driver, current_page, data_header, urlFolder)
+                  
+                    Csv_To_Excel(csv_filenames,urlCsvFile,formatted_date)
+                else:
+                    click_next(driver)
+                    print(f"page số {current_page + 1}")
+                    csv_filenames,urlCsvFile,formatted_date, success,number_now = extract_and_save_table_data_loads_cachup(driver, current_page, data_header, urlFolder)
+                 
+                    Csv_To_Excel(csv_filenames,urlCsvFile,formatted_date)
+                current_page += 1
+            success = True
+                 
+                   
+         
         
     except Exception as e:
         print(f"Lỗi trong quá trình xử lý: {e}")
@@ -474,8 +515,11 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
     data_header.insert(1,"PAGE")
     date = datetime.strptime(dateSelect,"%d/%m/%Y")
     formatted_date = date.strftime("%d-%m-%Y")
-    csv_filenames = os.path.join(urlCsvFile, f"Cachup_data_{formatted_date}.csv")
+    csv_filenames = os.path.join(urlCsvFile, f"Cachup_data_{formatted_date}_{page}.csv")
     # Đọc số lượng bản ghi hiện có trong file CSV
+    success = False
+    number_now = 0
+    #
     
     existing_records = 0
     if os.path.exists(csv_filenames):
@@ -581,15 +625,17 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
         number = existing_records + 1
         
         # csv_filenames = os.path.join(urlCsvFile,csv_filenames)
-        
+        number_now = 0
         for row in rows[existing_records:]:
+            number_now += 1
             cols = row.find_elements(By.TAG_NAME, 'td')
             data_row = [number,page]
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
-            if number == 20:
-               return data_array, process_edit_data
+            if number_now == 20:
+                success = False
+                return data_array, process_edit_data, success,number_now
             for col in cols[1:]:
                 retry_count = 1
                 while retry_count > 0:
@@ -629,12 +675,14 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
                     writer.writeheader()
                 writer.writerows([{data_header[i]: data_row[i] for i in range(len(data_header))}])
             data_array.append(data_row)
+          
             # if number <= 10:   
             #    getData_Image(cols,number,numberIDBenhNhan)
-        return data_array, process_edit_data
+        return data_array, process_edit_data, success, number_now
     
-    data_array_all, process_edit_data = get_row_data()
-
+    data_array_all, process_edit_data, successs, number_nows = get_row_data()
+    success = successs
+    number_now = number_nows
     # # Ghi CSV
     # with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
     #     csvwriter = csv.writer(csvfile)
@@ -645,30 +693,14 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
     object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
 
     # Ghi JSON
-   
+    
     print("\n===== Hoàn tất hủy diệt dữ liệu =====")
-   
+    return csv_filenames,urlCsvFile,formatted_date,successs,number_nows 
 # Main function to run the script
 def main(urlFolder):
-    global dateSelect
     try:
-        #khai báo thông số     
-        chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
-        login_url = "http://192.168.0.65:8180/"
-        area_data_url = ""
-        username = "quyen.ngoq"
-        password = "74777477"
-        area_data_url = "http://192.168.0.65:8180/#menu=131&action=111"
-    
-      
-        
-        driver = login(chromedriver_path, login_url, username, password)
-        # chọn phân trang tính toán tổng số page
-        driver.get(area_data_url)
-        time.sleep(2)
-        set_date2(driver, "dbFrom",dateSelect)
-        set_date2(driver, "dbTo", dateSelect)
-    
+        driver = login()
+
         click_search_button(driver,urlFolder)
         time.sleep(3)
         driver.quit()
@@ -728,6 +760,44 @@ def Export_Excel_File_And_GetData(file_path):
     except ValueError:
         print(name_part)
 
+def Csv_To_Excel(csv_filename, urlFolder, format_date):
+    try:
+        output_filename = os.path.join(urlFolder, f"Patient_Data_{format_date}.xlsx")
+        
+        # Tạo workbook mới và chọn sheet active
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+
+        # Đọc file CSV và ghi từng dòng vào Excel
+        with open(csv_filename, 'r', encoding='utf-8-sig') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            headers = next(csv_reader)  # Đọc header
+            
+            # Ghi headers
+            for col, header in enumerate(headers, start=1):
+                ws.cell(row=1, column=col, value=header)
+            
+            # Ghi dữ liệu
+            for row_idx, row in enumerate(csv_reader, start=2):
+                for col, value in enumerate(row, start=1):
+                    ws.cell(row=row_idx, column=col, value=value)
+                
+                # Lưu workbook sau mỗi 1000 dòng để giảm sử dụng bộ nhớ
+                if row_idx % 1000 == 0:
+                    wb.save(output_filename)
+
+        # Lưu lần cuối
+        wb.save(output_filename)
+
+        # Xóa file CSV gốc
+        os.remove(csv_filename)
+        print("===Kết thúc thu thập dữ liệu===")
+        return True
+
+    except Exception as e:
+        print(f"Lỗi chuyển đổi CSV sang file Excel: {e}")
+        return False
 
 root = Tk()
 root.title("Tkinter ComboBox Example")
@@ -736,7 +806,7 @@ root.title("Tkinter ComboBox Example")
 numberget = [0]
 # Đặt kích thước cho cửa sổ
 window_width = 400
-window_height = 300
+window_height = 200
 
 # Lấy kích thước màn hình
 screen_width = root.winfo_screenwidth()
@@ -764,11 +834,7 @@ label.pack(pady=10)
 file_button = ttk.Button(root, text="Select csv Excel", command=select_Excel_File, width=30)  # Corrected here
 file_button.pack(pady=10)
 
-cal = DateEntry(root,selectmode='day')
-cal.pack(pady=10)
 
-cal2 = DateEntry(root,selectmode='day')
-cal2.pack(pady=10)
 
 button = ttk.Button(root, text="Get Data", command=select_folder, width=10)
 button.pack(pady=10)
