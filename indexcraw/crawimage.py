@@ -61,6 +61,11 @@ from PIL import Image
 import numpy as np
 
 
+#urlfolder lưu đường dẫn folder khi ghi nhận xong
+urlFolder = ""
+#urlFileExcel lưu đường dẫn file Excel
+urlFileExcel = ""
+#ngày chọn 
 dateSelect = ''
 page = 2
 
@@ -163,15 +168,15 @@ def login():
         print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless=new")
-        # options.add_argument("--window-size=1920,1080")
-        # options.add_argument("--disable-gpu")
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
-        # options.add_argument("--disable-extensions")
-        # options.add_argument("--disable-plugins")
-        # options.add_argument("--disable-software-rasterizer")
-        # options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-plugins")
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
         #     # Thêm các tùy chọn để giảm tải CPU và bộ nhớ
         # options.add_argument("--no-zygote")
@@ -391,14 +396,70 @@ def select_date(driver, month, year):
     except Exception as e:
         print(f"Lỗi khi chọn tháng và năm: {e}")
 ##       
-def click_next(driver):
-    getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
-    getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-next")
-    print(getclick.get_attribute('outerHTML'))
-    if getclick.get_attribute('disabled') == None:
-       getclick.click()
+def click_next(driver,page):
+    number = 0
+    while number < page:
+        getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
+        getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-next")
+        print(getclick.get_attribute('outerHTML'))
+        if getclick.get_attribute('disabled') == None:
+           getclick.click()
+        number += 1
+#hàm lấy đọc dữ liệu file excel lấy stt và page cuối cùng
+def read_excel_last_element():
+    global urlFileExcel
+    try:
+        # Đọc file Excel
+        df = pd.read_excel(urlFileExcel)
+        
+        # Kiểm tra xem có ít nhất hai cột không
+        if len(df.columns) < 2:
+            return {"STT": 0, "Page": 0}
+        
+        # Lấy hai cột đầu tiên
+        stt = df.iloc[:, 0]
+        page = df.iloc[:, 1]
+        
+        # Kiểm tra xem có dữ liệu không
+        if len(stt) == 0 or len(page) == 0:
+            return {"STT": 0, "Page": 0}
+        
+        # Lấy phần tử cuối cùng
+        last_element = {
+            "STT": stt.iloc[-1],
+            "Page": page.iloc[-1]
+        }
+        
+        return last_element
+    except Exception:
+        # Trả về một từ điển với giá trị mặc định nếu có bất kỳ lỗi nào xảy ra
+        return {"STT": 0, "Page": 0}
+#hàm lấy total và tổng số page
+def get_total_and_page(driver):
+    print("===bắt đầu lấy tổng số phần tử và page===")
+    Total = 0
+    page = 0
+    try:    
+        Total = check_and_click_page(driver)
+        if Total is not None:
+            numberpage = int(Total) / 80
+            numberpage_rounded = math.ceil(numberpage)
+            print(f"Tổng số page ghi nhận là: {numberpage_rounded}")
+            page = numberpage_rounded
+        else:
+            print("lỗi ghi nhận số page")
+        
+        getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
+        getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-first")
+        # print(getclick.get_attribute('outerHTML'))
+        if getclick.get_attribute('disabled') is None:
+           getclick.click()
+        time.sleep(10)
+    except Exception as e:
+        print("====lỗi hàm get total====")
+    return Total,page
 
-def click_search_button(driver,urlFolder):
+def click_search_button(driver):
     global page
     try:    
         Total = check_and_click_page(driver)
@@ -414,43 +475,37 @@ def click_search_button(driver,urlFolder):
         print(getclick.get_attribute('outerHTML'))
         if getclick.get_attribute('disabled') is None:
            getclick.click()
-        
+        time.sleep(10)
        
         
       
-        iterations = numberpage_rounded
-        success = False
-        number_now = 0
-        #doc file csv 
-        while not success:
-            if number_now == 20:
-                print("===đang thực hiện login lại===")
-                if driver: 
-                    driver.quit()
-                driver = login()
-            time.sleep(1)
-            current_page = page
-            csv_filenames = ""
-            urlCsvFile = ""
-            formatted_date = ""
-            while current_page < iterations:
-                time.sleep(1)
-                data_header = []
-                data_header = extract_header_data(driver)
-                print(data_header)
-                if current_page == 0:
-                    # Xử lý trang đầu tiên
-                    csv_filenames,urlCsvFile,formatted_date,success,number_now = extract_and_save_table_data_loads_cachup(driver, current_page, data_header, urlFolder)
-                  
-                    Csv_To_Excel(csv_filenames,urlCsvFile,formatted_date)
-                else:
-                    click_next(driver)
-                    print(f"page số {current_page + 1}")
-                    csv_filenames,urlCsvFile,formatted_date, success,number_now = extract_and_save_table_data_loads_cachup(driver, current_page, data_header, urlFolder)
-                 
-                    Csv_To_Excel(csv_filenames,urlCsvFile,formatted_date)
-                current_page += 1
-            success = True
+        # iterations = numberpage_rounded
+        # success = False
+        # number_now = 0
+        # #doc file csv 
+            
+        # current_page = page
+        # csv_filenames = ""
+        # urlCsvFile = ""
+        # formatted_date = ""
+        # while current_page < iterations:
+        #     time.sleep(1)
+        #     data_header = []
+        #     data_header = extract_header_data(driver)
+        #     print(data_header)
+        #     if current_page == 0:
+        #         # Xử lý trang đầu tiên
+        #         csv_filenames,urlCsvFile,formatted_date,success,number_now = extract_and_save_table_data_loads_cachup(driver, current_page, data_header, urlFolder)
+            
+        #         Csv_To_Excel(csv_filenames,urlCsvFile,formatted_date)
+        #     else:
+        #         click_next(driver)
+        #         print(f"page số {current_page + 1}")
+        #         csv_filenames,urlCsvFile,formatted_date, success,number_now = extract_and_save_table_data_loads_cachup(driver, current_page, data_header, urlFolder)
+            
+        #         Csv_To_Excel(csv_filenames,urlCsvFile,formatted_date)
+        #     current_page += 1
+          
                  
                    
          
@@ -507,25 +562,30 @@ def capture_image(driver, download_path, file_name, numberId):
         print("success")
     except Exception as e:
         print("failed -", str(e))
-
-# craw ca chụp
-def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile):
-    global dateSelect
+#lấy dữ liệu file csv
+def getdatacsv(driver):
+    global dateSelect,urlFolder
+    data_header = extract_header_data(driver)
     data_header.insert(0,"STT")
     data_header.insert(1,"PAGE")
     date = datetime.strptime(dateSelect,"%d/%m/%Y")
     formatted_date = date.strftime("%d-%m-%Y")
-    csv_filenames = os.path.join(urlCsvFile, f"Cachup_data_{formatted_date}_{page}.csv")
+    csv_filenames = os.path.join(urlFolder, f"Cachup_data_{formatted_date}.csv")
     # Đọc số lượng bản ghi hiện có trong file CSV
-    success = False
-    number_now = 0
-    #
-    
     existing_records = 0
+    last_stt = None
+    last_page = None
     if os.path.exists(csv_filenames):
         with open(csv_filenames, 'r', newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
             existing_records = sum(1 for row in reader) - 1  # Trừ 1 để bỏ qua header
+         #lấy thêm thông số stt và pages
+        with open(csv_filenames, 'r', encoding='utf-8') as file:
+            csv_reader = csv.DictReader(file)
+            for row in csv_reader:
+                if 'STT' in row and 'PAGE' in row:
+                    last_stt = row['STT']
+                    last_page = row['PAGE']
     else: 
         print("===không tồn tại file CSV===")
         with open(csv_filenames, 'w', newline='', encoding='utf-8') as file:
@@ -533,7 +593,16 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
             writer.writerow(data_header)
             print(f"Đã tạo thành công csv tai: {csv_filenames}")
     print(f"Số bản ghi hiện có: {existing_records}")
+    return existing_records ,data_header,csv_filenames,last_stt, last_page
+#LẤY PAGE VÀ STT
 
+# craw ca chụp
+def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun):
+    global dateSelect, urlFolder
+    # Đọc số lượng bản ghi hiện có trong file CSV
+    numberrunget = 0
+    #
+    existing_records,data_header,csv_filenames,last_stt,last_page = getdatacsv(driver)
     print("=======lay du lieu ca chup========")
     time.sleep(1)
 
@@ -634,8 +703,7 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
             number += 1
             numberIDBenhNhan = ""
             if number_now == 20:
-                success = False
-                return data_array, process_edit_data, success,number_now
+                return data_array, process_edit_data, number_now
             for col in cols[1:]:
                 retry_count = 1
                 while retry_count > 0:
@@ -675,49 +743,84 @@ def extract_and_save_table_data_loads_cachup(driver,page, data_header,urlCsvFile
                     writer.writeheader()
                 writer.writerows([{data_header[i]: data_row[i] for i in range(len(data_header))}])
             data_array.append(data_row)
-          
+            # Csv_To_Excel(csv_filenames)
             # if number <= 10:   
             #    getData_Image(cols,number,numberIDBenhNhan)
-        return data_array, process_edit_data, success, number_now
+        return data_array, process_edit_data, number_now
     
-    data_array_all, process_edit_data, successs, number_nows = get_row_data()
-    success = successs
-    number_now = number_nows
-    # # Ghi CSV
-    # with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-    #     csvwriter = csv.writer(csvfile)
-    #     csvwriter.writerow(data_header)
-    #     csvwriter.writerows(data_array_all)
-
-    # Tạo object array
-    object_array = [{key: value for key, value in zip(data_header, data_row)} for data_row in data_array_all]
-
-    # Ghi JSON
-    
-    print("\n===== Hoàn tất hủy diệt dữ liệu =====")
-    return csv_filenames,urlCsvFile,formatted_date,successs,number_nows 
+    data_array_all, process_edit_data, numberrunget = get_row_data()
+ 
+    return numberrunget,csv_filenames 
 # Main function to run the script
-def main(urlFolder):
+def main():
     try:
-        driver = login()
+        total = 0
+        totalpage = 0
+        driver = None
+        csvfilenew = ""
 
-        click_search_button(driver,urlFolder)
-        time.sleep(3)
+        # Đăng nhập lần đầu để lấy giá trị total
+        driver = login()
+        time.sleep(0.5)
+        total, totalpage = get_total_and_page(driver)
+        print(f"+=>hoàn tất ghi nhận số page là:{totalpage}")
+        print(f"+=>hoàn tất ghi nhận tổng số phần tử cần lấy là: {total}")
+        
         driver.quit()
+
+        # Lấy dữ liệu từ file Excel
+        existing_records,data_header,csv_filenames,last_stt,last_page = getdatacsv(driver)
+        Stt = int(last_stt)
+        page = int(last_page)
+        if Stt == 0 and page == 0:
+            Stt = 0
+            page = 1
+        print(f"+=>ta có Stt:{Stt}, page:{page}")
+
+        numberget = Stt
+        while numberget < int(total):
+            print(f"====đang chạy: {numberget}/{total}====")
+            
+            if numberget % 20 == 0 or numberget == 0:
+                print("=====Đang đăng nhập lại=====")
+                if driver:
+                    driver.quit()
+                driver = login()
+                click_next(driver, page)
+            
+            newnum, csvfilenew = extract_and_save_table_data_loads_cachup(driver, Stt, numberget)
+            numberget += newnum
+            print(f"number đếm hiện tại: {numberget}")
+            
+            Stt += newnum
+            if newnum == 20:
+                page += 1
+            
+            time.sleep(3)
+
+        if driver:
+            driver.quit()
+        Csv_To_Excel(csvfilenew)
+
     except Exception as e:
         print(f"Lỗi trong quá trình thực thi chính: {e}")
+        if driver:
+            driver.quit()
+
 
 def on_button_click():
     print("Button clicked!")
     
 
 def select_folder():
+    global urlFolder
     folder_path = filedialog.askdirectory(
         title="Select a folder"
     )
     if folder_path:
         print(folder_path)
-        main(folder_path)
+        urlFolder = folder_path
+        main()
     else:
         print("No folder selected.")
         
@@ -738,7 +841,7 @@ def select_Excel_File():
 
 #đọc file excel 
 def Export_Excel_File_And_GetData(file_path):
-    global dateSelect
+    global dateSelect,urlFileExcel
     if not file_path:
         print("Không có file nào được chọn.")
         return None
@@ -749,7 +852,8 @@ def Export_Excel_File_And_GetData(file_path):
         date = datetime.strptime(name_part,"%d-%m-%Y")
         formatted_date = date.strftime("%d/%m/%Y")
         dateSelect = formatted_date
-        
+        urlFileExcel = file_path
+        print(f"đường dẫn:{file_path}")
         # Đọc workbook
         workbook = openpyxl.load_workbook(file_path)
         sheet = workbook.active
@@ -760,9 +864,10 @@ def Export_Excel_File_And_GetData(file_path):
     except ValueError:
         print(name_part)
 
-def Csv_To_Excel(csv_filename, urlFolder, format_date):
+def Csv_To_Excel(csv_filename):
+    global urlFileExcel
     try:
-        output_filename = os.path.join(urlFolder, f"Patient_Data_{format_date}.xlsx")
+        output_filename = os.path.basename(urlFileExcel)
         
         # Tạo workbook mới và chọn sheet active
         wb = Workbook()
