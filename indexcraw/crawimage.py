@@ -156,22 +156,19 @@ def login():
     global dateSelect
     try:
         #khai báo thông số     
-        chromedriver_path = "chromedriver.exe"  # Ensure this path is correct
+          # Ensure this path is correct
         login_url = "http://192.168.0.65:8180/"
         area_data_url = ""
         username = "quyen.ngoq"
         password = "74777477"
         area_data_url = "http://192.168.0.65:8180/#menu=131&action=111"  
             
-        if not os.path.isfile(chromedriver_path):
-            raise ValueError(f"The path is not a valid file: {chromedriver_path}")
         
-        print(f"Using chromedriver at: {chromedriver_path}")
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         #cải tiến
         options.add_argument("--headless")  # Chạy trình duyệt trong chế độ headless
-        #chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
         options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         #===========
         # options.add_argument("--headless=new")
@@ -191,8 +188,8 @@ def login():
         # options.add_argument("--ignore-certificate-errors")
         # options.add_argument("--disable-accelerated-2d-canvas")
         # options.add_argument("--disable-gpu-sandbox")
-        service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=service,options=options)
+        # service = Service(chromedriver_path)
+        driver = webdriver.Chrome(options=options)
 
         # Open the website
         driver.get(login_url)
@@ -419,11 +416,29 @@ def select_date(driver, month, year):
         print(f"Lỗi khi chọn tháng và năm: {e}")
 ##       
 def click_next(driver):
-        getdiv = driver.find_element(By.CLASS_NAME, 'j-bar-warp')
+    try:
+        # Đợi cho đến khi phần tử j-bar-warp xuất hiện
+        wait = WebDriverWait(driver, 10)
+        getdiv = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'j-bar-warp')))
+        
+        # Tìm nút "next" trong phần tử j-bar-warp
         getclick = getdiv.find_element(By.CLASS_NAME, "j-bar-next")
         print(getclick.get_attribute('outerHTML'))
-        if getclick.get_attribute('disabled') == None:
-           getclick.click()
+        
+        # Kiểm tra xem nút có bị vô hiệu hóa không
+        if getclick.get_attribute('disabled') is None:
+            # Đợi cho đến khi nút có thể được nhấp
+            wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "j-bar-next")))
+            getclick.click()
+            # Đợi cho đến khi trang mới được tải
+            wait.until(EC.staleness_of(getdiv))
+        else:
+            print("Nút 'next' đã bị vô hiệu hóa")
+            return False
+    except (StaleElementReferenceException, TimeoutException) as e:
+        print(f"Lỗi khi nhấp nút 'next': {e}")
+        return False
+    return True
 #hàm lấy đọc dữ liệu file excel lấy stt và page cuối cùng
 def read_excel_last_element():
     global urlFileExcel
@@ -648,9 +663,9 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
             # Chụp ảnh và lưu vào thư mục
             if image_count > 1:
                 for i in range(image_count):
-                    capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
+                    capture_image(driver, urlFolder,
                                 f"saved_image_{number}_{i}_{numberSeries_item}.png", numberId)
-                    time.sleep(0.5)
+                    time.sleep(3)
                     # Nhấn nút chuyển sang ảnh tiếp theo
                     next_button = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, '.paging .fa-chevron-right'))
@@ -658,7 +673,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                     next_button.click()
                     time.sleep(0.5)
             else:
-                capture_image(driver, "d:\\USER DATA\\Documents\\crawpython\\indexcraw\\ImageBenhNhan\\",
+                capture_image(driver, urlFolder,
                             f"saved_image_{number}_0_{numberSeries_item}.png", numberId)
             
             series_data.append({
@@ -693,9 +708,11 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
         )
         time.sleep(0.5)
         div_ViewImage.click()
+        
         time.sleep(0.5)
         cols[0].click()
-        time.sleep(0.5)
+        # print(f"lỗi ở đây lấy ảnh hổng dc")
+        time.sleep(3)
         
     
     def get_row_data(page):
@@ -717,10 +734,11 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
-            if number_now == 21:
+            if number_now == 11:
                 return data_array, process_edit_data, number_now
             for col in cols[1:]:
                 retry_count = 1
+               
                 while retry_count > 0:
                     try:
                         actions = ActionChains(driver)
@@ -733,8 +751,18 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                         except:
                             pass
                         print(f"nhánh {len(data_row)}: {text}")
-                        if len(data_row) == 0:   
+                        if len(data_row) == 2:   
                            numberIDBenhNhan = text
+                        if len(data_row) == 7:
+                            print(f"mã bệnh nhân là: {numberIDBenhNhan}")
+                            valueImage = text
+                            if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
+                                if int(valueImage) <= 3:  # Thay đổi từ 5 thành 3
+                                    getData_Image(cols, number, numberIDBenhNhan)
+                                else:
+                                    print(f"Bỏ qua bệnh nhân {numberIDBenhNhan} vì có {valueImage} hình ảnh")
+                            else:
+                                print(f"Giá trị không hợp lệ cho số lượng hình ảnh: {valueImage}")
                         data_row.append(text)
                         
                         
@@ -767,7 +795,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
  
     return numberrunget,csv_filenames 
 #xử lý ngoại lệ
-def login_again(max_retries=2):
+def login_again(max_retries=3):
     for attempt in range(max_retries):
         try:
             driver = login()
@@ -780,7 +808,7 @@ def login_again(max_retries=2):
                 time.sleep(5)  # Chờ trước khi thử lại
             else:
                 print("===chạy lại hàm main đã thử 2 lần có vẻ hệ thống reset sau 300s===")
-                main()
+                raise
                 # raise  # Nếu đã thử hết số lần, ném ngoại lệ
 # Main function to run the script
 def main():
@@ -816,6 +844,9 @@ def main():
        
         while numberget <= int(total):
             print(f"====đang chạy: {numberget}/{total}====")
+            if Stt != 0:
+               page = min(numberget // items_per_page, totalpage - 1) 
+               Stt = 0
             try:
                 if success == False:
                     print("=====Đang đăng nhập lại=====")
@@ -826,14 +857,16 @@ def main():
                     driver = login_again()
                     # Điều hướng đến trang đúng
                     for _ in range(page):
-                        click_next(driver)
+                        if not click_next(driver):
+                            print("Không thể tiếp tục điều hướng")
+                            break
                     time.sleep(1)
                 
                 if driver:
                     items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup(driver, Stt, numberget,page)
                     Csv_To_Excel(csvfilenew)
-                    numberget += 20
-                    Stt += 20
+                    numberget += 10
+                    Stt += 10
                     page = min(numberget // items_per_page, totalpage - 1)
                     print(f"number đếm hiện tại: {numberget}")
                     success = False
