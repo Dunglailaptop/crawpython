@@ -621,7 +621,13 @@ def getdatacsv(driver):
     print(f"Số bản ghi hiện có: {existing_records}")
     return existing_records ,data_header,csv_filenames
 #LẤY PAGE VÀ STT
-
+def locate_table(driver):
+    listbody_div = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, 'lstMain-body'))
+    )
+    table = listbody_div.find_element(By.TAG_NAME, 'table')
+    tbodys = table.find_elements(By.TAG_NAME, "tbody")
+    return tbodys[1].find_elements(By.TAG_NAME, 'tr')
 # craw ca chụp
 def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
     global dateSelect, urlFolder
@@ -632,13 +638,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
     print("=======lay du lieu ca chup========")
     time.sleep(1)
 
-    def locate_table():
-        listbody_div = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'lstMain-body'))
-        )
-        table = listbody_div.find_element(By.TAG_NAME, 'table')
-        tbodys = table.find_elements(By.TAG_NAME, "tbody")
-        return tbodys[1].find_elements(By.TAG_NAME, 'tr')
+    
     
     def get_series_data(number, numberId):
         series_data = []
@@ -664,7 +664,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
             if image_count > 1:
                 for i in range(image_count):
                     capture_image(driver, urlFolder,
-                                f"saved_image_{number}_{i}_{numberSeries_item}.png", numberId)
+                                f"saved_image_{number}_frame_{i}_{numberSeries_item}.png", numberId)
                     time.sleep(3)
                     # Nhấn nút chuyển sang ảnh tiếp theo
                     next_button = WebDriverWait(driver, 10).until(
@@ -674,7 +674,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                     time.sleep(0.5)
             else:
                 capture_image(driver, urlFolder,
-                            f"saved_image_{number}_0_{numberSeries_item}.png", numberId)
+                            f"saved_image_{number}_frame_0_{numberSeries_item}.png", numberId)
             
             series_data.append({
                 "image_count": image_count
@@ -684,7 +684,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
 
     def getData_Image(cols, number, numberId):
         # Get the first column data (assuming it's the ID or unique identifier)
-        cols[0].click()
+        # cols[0].click()
         time.sleep(0.5)  # Đợi để trang load
 
         div_Menu = WebDriverWait(driver, 10).until(
@@ -708,15 +708,44 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
         )
         time.sleep(0.5)
         div_ViewImage.click()
-        
-        time.sleep(0.5)
-        cols[0].click()
-        # print(f"lỗi ở đây lấy ảnh hổng dc")
         time.sleep(3)
-        
+        # cols[0].click()
+        # time.sleep(3)
+    
+    def click_element(element):
+        try:
+            # Đợi cho đến khi phần tử có thể click được
+            element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, element.get_attribute('xpath')))
+            )
+            # Scroll đến phần tử
+            driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            # Click vào phần tử
+            element.click()
+        except TimeoutException:
+            # Nếu không thể click, thử dùng JavaScript
+            driver.execute_script("arguments[0].click();", element)    
+    
+    def get_many_image(MaBenhNhan):
+        headers = ["MaBenhNhan"]
+        csvFilenameImageToLong = os.path.join(urlFolder,"DS_BenhNhan_Nhieu_Anh")
+        if os.path.exists(csvFilenameImageToLong):
+            with open(csvFilenameImageToLong, 'a', newline='', encoding='utf-8') as file:
+                writer = csv.DictWriter(file, fieldnames=headers)
+                if file.tell() == 0:  # If the file is empty, write the header
+                    writer.writeheader()
+                writer.writerow({"MaBenhNhan": MaBenhNhan})
+        else:
+            with open(csvFilenameImageToLong, 'w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerow(headers)
+                writer.writerow([MaBenhNhan])
+            print(f"Đã tạo thành công file csv của thư mục nhiều ảnh tại: {csvFilenameImageToLong}")
+        print("đã ghi xong bệnh nhân nhiều ảnh")
+            
     
     def get_row_data(page):
-        rows = locate_table()
+        rows = locate_table(driver)
         data_array = []
         process_edit_data = []
       
@@ -734,7 +763,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
-            if number_now == 11:
+            if number_now == 16:
                 return data_array, process_edit_data, number_now
             for col in cols[1:]:
                 retry_count = 1
@@ -758,9 +787,18 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             valueImage = text
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
                                 if int(valueImage) <= 3:  # Thay đổi từ 5 thành 3
+                                    cols[0].click()
                                     getData_Image(cols, number, numberIDBenhNhan)
+                                    print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
+                                    actions = ActionChains(driver)
+                                    actions.move_to_element(cols[0]).perform()
+                                    time.sleep(5)
+                                    cols[0].click()
                                 else:
+                                    print("ghi nhận lại bệnh nhân có nhiều ảnh từ 3 trở lên")
                                     print(f"Bỏ qua bệnh nhân {numberIDBenhNhan} vì có {valueImage} hình ảnh")
+                                    get_many_image(numberIDBenhNhan)
+                                    
                             else:
                                 print(f"Giá trị không hợp lệ cho số lượng hình ảnh: {valueImage}")
                         data_row.append(text)
@@ -775,7 +813,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                         else:
                             print("Vào rồi nè")
                             time.sleep(0.5)
-                            rows = locate_table()
+                            rows = locate_table(driver)
                             time.sleep(0.5)
             print("===============================")
             # # Ghi dữ liệu tạm thời vào file CSV
@@ -865,8 +903,8 @@ def main():
                 if driver:
                     items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup(driver, Stt, numberget,page)
                     Csv_To_Excel(csvfilenew)
-                    numberget += 10
-                    Stt += 10
+                    numberget += 15
+                    Stt += 15
                     page = min(numberget // items_per_page, totalpage - 1)
                     print(f"number đếm hiện tại: {numberget}")
                     success = False
@@ -916,7 +954,50 @@ def select_Excel_File():
     else:
         print("No file selected.")
    
-
+#hàm truy vết toàn bộ ảnh còn lại
+def get_data_image_final():
+    csvFilenameImageToLong = os.path.join(urlFolder, "DS_BenhNhan_Nhieu_Anh")
+    patient_ids = []
+    if os.path.exists(csvFilenameImageToLong):
+        print(f"File CSV đã được tìm thấy tại: {csvFilenameImageToLong}")
+        with open(csvFilenameImageToLong, 'r', newline='', encoding='utf-8') as file:
+            csv_reader = csv.DictReader(file)
+            for row in csv_reader:
+                patient_ids.append(row['MaBenhNhan'])
+        
+        print(f"Đã đọc {len(patient_ids)} mã bệnh nhân từ file CSV.")
+        print("===thực thi truy vết từng cái===")
+        #login lần đầu để setup khung giờ
+        driver = login_again()
+        start_index = len(patient_ids)
+        if patient_ids:
+           numbers = 0
+           for id in patient_ids[start_index:]:
+               if numbers == 3:
+                  if driver:
+                     driver.quit()
+                  driver = login_again()
+                  numbers = 0
+               if driver:
+                     # Find and enter username
+                    searchIdPatient = driver.find_element(By.ID, "txtUsername")
+                    searchIdPatient.send_keys(searchIdPatient)
+                    btns_element = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "btns"))
+                    )
+                    search_button = btns_element.find_element(By.ID, "btnSearch")
+                    search_button.click()
+                    rows = locate_table(driver)
+                    for row in rows:
+                        cols = row.find_elements(By.CSS_SELECTOR,"")
+                        for col in cols:
+                            print(f"{col}")
+        if driver:
+           driver.quit()       
+                
+    else:
+        print("Không tìm thấy file CSV.")
+        
 
 
 #đọc file excel 
