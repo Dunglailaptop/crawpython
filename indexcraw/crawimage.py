@@ -170,7 +170,7 @@ def login():
         options.add_argument("--headless")  # Chạy trình duyệt trong chế độ headless
         # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
         options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
-        #===========
+        # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
         # options.add_argument("--disable-gpu")
@@ -790,8 +790,12 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                                     cols[0].click()
                                     getData_Image(cols, number, numberIDBenhNhan)
                                     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
-                                    actions = ActionChains(driver)
-                                    actions.move_to_element(cols[0]).perform()
+                                    # actions = ActionChains(driver)
+                                    # actions.move_to_element(cols[0]).perform()
+                                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                                    # Hoặc cuộn đến phần tử cụ thể
+                                    element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
+                                    driver.execute_script("arguments[0].scrollIntoView(true);", element)
                                     time.sleep(5)
                                     cols[0].click()
                                 else:
@@ -956,7 +960,17 @@ def select_Excel_File():
    
 #hàm truy vết toàn bộ ảnh còn lại
 def get_data_image_final():
-    csvFilenameImageToLong = os.path.join(urlFolder, "DS_BenhNhan_Nhieu_Anh")
+    urlFolders = ""
+    folder_path = filedialog.askdirectory(
+        title="Select a folder"
+    )
+    if folder_path:
+        print(folder_path)
+        urlFolders = folder_path
+      
+    else:
+        print("No folder selected.")
+    csvFilenameImageToLong = os.path.join(urlFolders, "DS_BenhNhan_Nhieu_Anh")
     patient_ids = []
     if os.path.exists(csvFilenameImageToLong):
         print(f"File CSV đã được tìm thấy tại: {csvFilenameImageToLong}")
@@ -980,7 +994,7 @@ def get_data_image_final():
                   numbers = 0
                if driver:
                      # Find and enter username
-                    searchIdPatient = driver.find_element(By.ID, "txtUsername")
+                    searchIdPatient = driver.find_element(By.ID, "txtPatientId")
                     searchIdPatient.send_keys(searchIdPatient)
                     btns_element = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "btns"))
@@ -1094,7 +1108,7 @@ root.title("Tkinter ComboBox Example")
 numberget = [0]
 # Đặt kích thước cho cửa sổ
 window_width = 400
-window_height = 200
+window_height = 250
 
 # Lấy kích thước màn hình
 screen_width = root.winfo_screenwidth()
@@ -1125,6 +1139,9 @@ file_button.pack(pady=10)
 
 
 button = ttk.Button(root, text="Get Data", command=select_folder, width=10)
+button.pack(pady=10)
+
+button = ttk.Button(root, text="Get data final many image", command=get_data_image_final, width=10)
 button.pack(pady=10)
 
 # Start the Tkinter event loop
