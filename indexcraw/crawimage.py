@@ -166,9 +166,9 @@ def login():
         
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        #cải tiến
-        options.add_argument("--headless")  # Chạy trình duyệt trong chế độ headless
-        # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        # #cải tiến
+        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
         options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
@@ -628,61 +628,51 @@ def locate_table(driver):
     table = listbody_div.find_element(By.TAG_NAME, 'table')
     tbodys = table.find_elements(By.TAG_NAME, "tbody")
     return tbodys[1].find_elements(By.TAG_NAME, 'tr')
-# craw ca chụp
-def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
-    global dateSelect, urlFolder
-    # Đọc số lượng bản ghi hiện có trong file CSV
-    numberrunget = 0
-    #
-    existing_records,data_header,csv_filenames = getdatacsv(driver)
-    print("=======lay du lieu ca chup========")
-    time.sleep(1)
 
-    
-    
-    def get_series_data(number, numberId):
-        series_data = []
-        checkButton = False
-        # Tìm tất cả các phần tử có class 'series-item'
-        series_items = WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.series-item'))
-        )
-        numberSeries_item = 0
-        for series_item in series_items:
-            numberSeries_item += 1
-            series_item.click()
-            time.sleep(0.5)
-            
-            # Lấy giá trị của thẻ 'ins-length'
-           
-            image_count = int(WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.ins-length'))
-            ).text)
-            print("in số lượng ảnh:" + str(image_count))
+def get_series_data(number, numberId,driver):
+    global urlFolder
+    series_data = []
+    checkButton = False
+    # Tìm tất cả các phần tử có class 'series-item'
+    series_items = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.series-item'))
+    )
+    numberSeries_item = 0
+    for series_item in series_items:
+        numberSeries_item += 1
+        series_item.click()
+        time.sleep(0.5)
+        
+        # Lấy giá trị của thẻ 'ins-length'
+        
+        image_count = int(WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.ins-length'))
+        ).text)
+        print("in số lượng ảnh:" + str(image_count))
 
-            # Chụp ảnh và lưu vào thư mục
-            if image_count > 1:
-                for i in range(image_count):
-                    capture_image(driver, urlFolder,
-                                f"saved_image_{number}_frame_{i}_{numberSeries_item}.png", numberId)
-                    time.sleep(3)
-                    # Nhấn nút chuyển sang ảnh tiếp theo
-                    next_button = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, '.paging .fa-chevron-right'))
-                    )
-                    next_button.click()
-                    time.sleep(0.5)
-            else:
+        # Chụp ảnh và lưu vào thư mục
+        if image_count > 1:
+            for i in range(image_count):
                 capture_image(driver, urlFolder,
-                            f"saved_image_{number}_frame_0_{numberSeries_item}.png", numberId)
-            
-            series_data.append({
-                "image_count": image_count
-            })
+                            f"saved_image_{number}_frame_{i}_{numberSeries_item}.png", numberId)
+                time.sleep(3)
+                # Nhấn nút chuyển sang ảnh tiếp theo
+                next_button = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, '.paging .fa-chevron-right'))
+                )
+                next_button.click()
+                time.sleep(0.5)
+        else:
+            capture_image(driver, urlFolder,
+                        f"saved_image_{number}_frame_0_{numberSeries_item}.png", numberId)
+        
+        series_data.append({
+            "image_count": image_count
+        })
 
-        return series_data
+    return series_data
 
-    def getData_Image(cols, number, numberId):
+def getData_Image(cols, number, numberId,driver):
         # Get the first column data (assuming it's the ID or unique identifier)
         # cols[0].click()
         time.sleep(0.5)  # Đợi để trang load
@@ -699,7 +689,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
         div_Zoom.click()
         time.sleep(0.5)
 
-        series_data = get_series_data(number, numberId)
+        series_data = get_series_data(number, numberId,driver)
         # print("tong so luong anh lay dc:"+series_data)
 
         time.sleep(0.5)
@@ -711,6 +701,21 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
         time.sleep(3)
         # cols[0].click()
         # time.sleep(3)
+# craw ca chụp
+def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
+    global dateSelect, urlFolder
+    # Đọc số lượng bản ghi hiện có trong file CSV
+    numberrunget = 0
+    #
+    existing_records,data_header,csv_filenames = getdatacsv(driver)
+    print("=======lay du lieu ca chup========")
+    time.sleep(1)
+
+    
+    
+   
+
+   
     
     def click_element(element):
         try:
@@ -788,7 +793,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
                                 if int(valueImage) <= 3:  # Thay đổi từ 5 thành 3
                                     cols[0].click()
-                                    getData_Image(cols, number, numberIDBenhNhan)
+                                    getData_Image(cols, number, numberIDBenhNhan,driver)
                                     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
                                     # actions = ActionChains(driver)
                                     # actions.move_to_element(cols[0]).perform()
@@ -960,17 +965,23 @@ def select_Excel_File():
    
 #hàm truy vết toàn bộ ảnh còn lại
 def get_data_image_final():
-    urlFolders = ""
+    global dateSelect, urlFolder
     folder_path = filedialog.askdirectory(
         title="Select a folder"
     )
     if folder_path:
         print(folder_path)
-        urlFolders = folder_path
+        urlFolder = folder_path
       
     else:
         print("No folder selected.")
-    csvFilenameImageToLong = os.path.join(urlFolders, "DS_BenhNhan_Nhieu_Anh")
+    csvFilenameImageToLong = os.path.join(urlFolder, "DS_BenhNhan_Nhieu_Anh")
+    namefolder = os.path.basename(urlFolder)
+    print(f"ten folder: {namefolder}")
+    date = namefolder.split("_")[-1]
+    formatdate = datetime.strptime(date, "%d-%m-%Y")
+    convert = formatdate.strftime("%d/%m/%Y")
+    dateSelect = convert
     patient_ids = []
     if os.path.exists(csvFilenameImageToLong):
         print(f"File CSV đã được tìm thấy tại: {csvFilenameImageToLong}")
@@ -981,36 +992,49 @@ def get_data_image_final():
         
         print(f"Đã đọc {len(patient_ids)} mã bệnh nhân từ file CSV.")
         print("===thực thi truy vết từng cái===")
+        
         #login lần đầu để setup khung giờ
         driver = login_again()
-        start_index = len(patient_ids)
-        if patient_ids:
-           numbers = 0
-           for id in patient_ids[start_index:]:
-               if numbers == 3:
-                  if driver:
-                     driver.quit()
-                  driver = login_again()
-                  numbers = 0
-               if driver:
-                     # Find and enter username
-                    searchIdPatient = driver.find_element(By.ID, "txtPatientId")
-                    searchIdPatient.send_keys(searchIdPatient)
-                    btns_element = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, "btns"))
-                    )
-                    search_button = btns_element.find_element(By.ID, "btnSearch")
-                    search_button.click()
-                    rows = locate_table(driver)
-                    for row in rows:
-                        cols = row.find_elements(By.CSS_SELECTOR,"")
-                        for col in cols:
-                            print(f"{col}")
-        if driver:
-           driver.quit()       
+        numbers = False
+        numbersget = 0
+        try:
+            for id in patient_ids:
+                if numbers:
+                    if driver:
+                        driver.quit()    
+                    driver = login_again()
                 
-    else:
-        print("Không tìm thấy file CSV.")
+                searchIdPatient = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, "txtPatientId"))
+                )
+                searchIdPatient.clear()
+                searchIdPatient.send_keys(id)
+
+                btns_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "btns"))
+                )
+                search_button = btns_element.find_element(By.ID, "btnSearch")
+                search_button.click()
+                time.sleep(3)
+                rows = locate_table(driver)
+                for row in rows:
+                    cols = row.find_elements(By.TAG_NAME, "td")
+                    if len(cols) > 6:
+                        image_count = cols[6].text
+                        if image_count.isdigit() and int(image_count) > 3:
+                            print(f"tìm thấy bệnh nhân nhiều ảnh: {image_count}")
+                            print("===thực hiện lấy ảnh===")
+                            cols[0].click()
+                            getData_Image(cols, numbersget, int(cols[1].text), driver)
+                            print(f"Lấy xong mã bệnh nhân:{cols[1].text}")
+                            numbers = True
+                            # Removed break to process all matching patients
+                if not numbers:
+                    print(f"Không tìm thấy bệnh nhân có nhiều hơn 3 ảnh cho ID: {id}")
+                numbersget += 1
+        finally:
+            if driver:
+                driver.quit()
         
 
 
