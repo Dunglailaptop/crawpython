@@ -151,8 +151,29 @@ def process_text(text):
     text_without_spaces = remove_spaces(text_without_accents)
     return text_without_spaces
 
+def next_action(driver,area_data_url):
+# chọn phân trang tính toán tổng số page
+    driver.get(area_data_url)
+    time.sleep(2)
+    set_date2(driver, "dbFrom",dateSelect)
+    set_date2(driver, "dbTo", dateSelect)
+    time.sleep(5)
+
+        # Tìm phần tử có class "btns"
+    btns_element = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "btns"))
+    )
+
+# Tìm phần tử có id "btnSearch" bên trong phần tử "btns"
+    search_button = btns_element.find_element(By.ID, "btnSearch")
+
+# Click vào nút tìm kiếm
+    search_button.click()
+
+
+
 # Function to initialize and log into the system
-def login():
+def login(type):
     global dateSelect
     try:
         #khai báo thông số     
@@ -217,24 +238,13 @@ def login():
         save = driver.find_element(By.ID, "btnSave")
         save.click()
         time.sleep(3)
-        
-        # chọn phân trang tính toán tổng số page
-        driver.get(area_data_url)
-        time.sleep(2)
-        set_date2(driver, "dbFrom",dateSelect)
-        set_date2(driver, "dbTo", dateSelect)
-        time.sleep(5)
         try:
-                # Tìm phần tử có class "btns"
-            btns_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "btns"))
-            )
-
-        # Tìm phần tử có id "btnSearch" bên trong phần tử "btns"
-            search_button = btns_element.find_element(By.ID, "btnSearch")
-
-        # Click vào nút tìm kiếm
-            search_button.click()
+            if int(type) == 1:
+                next_action(driver,area_data_url)
+            else:
+                url = "http://192.168.0.65:8180/#menu=29&action=168"
+                driver.get(url)
+                print("thực hiện chỉ định")
         except Exception as e:
                print(f"====LỔI TÌM SEARC: {e}")
         time.sleep(1)
@@ -787,7 +797,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                         print(f"nhánh {len(data_row)}: {text}")
                         if len(data_row) == 2:   
                            numberIDBenhNhan = text
-                           doc_chidinh_CLS(numberIDBenhNhan,driver)
+                        #    doc_chidinh_CLS(numberIDBenhNhan,driver)
                         if len(data_row) == 7:
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
@@ -846,7 +856,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
 def login_again(max_retries=3):
     for attempt in range(max_retries):
         try:
-            driver = login()
+            driver = login(1)
             
             # Thực hiện các bước đăng nhập
             return driver
@@ -1141,9 +1151,17 @@ def choose_csv_file():
 
 
 def get_patient_data(patient_id, driver):
+    def getdatainchidinh():
+        divprocess = driver.find_element(By.ID,"processEdit")
+        description = divprocess.find_element(By.ID,"description").text
+        ketluan = divprocess.find_element(By.ID,"conclusion").text
+        KyThuat = divprocess.find_element(By.ID,"technical").text
+        print(f"mô tả:{description}")
+        print(f"ket luan:{ketluan}")
+        print(f"ky thuat: {KyThuat}")
     try:
         # Mở trang web
-       
+        
 
         # Tìm trường nhập mã bệnh nhân và nhập dữ liệu
         patient_input = WebDriverWait(driver, 10).until(
@@ -1159,21 +1177,41 @@ def get_patient_data(patient_id, driver):
         )
         search_button.click()
 
-        # Đợi cho kết quả tải xong (bạn có thể cần điều chỉnh selector này)
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "resultContainer"))
+       
+
+                # Wait for the table to be present
+        table = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "table-striped"))
         )
 
-        # Tìm tất cả các trường input
-        inputs = driver.find_elements(By.TAG_NAME, "input")
+        # Find all rows in the table
+        rows = table.find_elements(By.TAG_NAME, "tr")
 
+        # Iterate through each row and extract the data
+        for row in rows:
+            row.click()
+            getdatainchidinh()
+            # Extract data from each cell
+            cells = row.find_elements(By.TAG_NAME, "td")
+            if cells:
+                patient_id = cells[0].find_element(By.CLASS_NAME, "patient-id").text
+                order_date = cells[0].find_element(By.CLASS_NAME, "order-date").text
+                order_num = cells[0].find_element(By.CLASS_NAME, "order-num").text
+                patient_name = cells[0].find_element(By.CLASS_NAME, "patient-name").text
+                service_count = cells[0].find_element(By.CLASS_NAME, "service-count").text
+                service_name = cells[0].find_element(By.CLASS_NAME, "service-name").text
+                  
+                # Print or process the extracted data
+                print(f"Patient ID: {patient_id}")
+                print(f"Order Date: {order_date}")
+                print(f"Order Number: {order_num}")
+                print(f"Patient Name: {patient_name}")
+                print(f"Service Count: {service_count}")
+                print(f"Service Name: {service_name}")
+                print("---")
         # Lưu trữ dữ liệu
         patient_data = {}
-        for input_field in inputs:
-            input_id = input_field.get_attribute("id")
-            input_value = input_field.get_attribute("value")
-            if input_id and input_value:
-                patient_data[input_id] = input_value
+    
 
         return patient_data
 
@@ -1184,37 +1222,33 @@ def get_patient_data(patient_id, driver):
     finally:
         driver.quit()
 
-def doc_chidinh_CLS(paintedId,driver):
-    # #CHỌN FILE 
-    # urlfilecsv = choose_csv_file()
-    # print(f"đường dẫn{urlfilecsv}")
-    
-    # #READ FILE CSV TRUOC SAU ĐÓ ĐÁNH DẤU 
-    # #lấy tổng  
-    # #LẶP QUA VÒNG LẶP 
-   # Giả sử driver đã được khởi tạo và đang ở trang web ban đầu
-# driver = webdriver.Chrome()  # hoặc trình duyệt khác tùy bạn sử dụng
+def doc_chidinh_CLS():
+    driver = login(2) 
+    file_path = filedialog.askopenfilename(
+        title="Chọn file CSV",
+        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+    )
 
-    # Lưu handle của cửa sổ hiện tại
-    original_window = driver.current_window_handle
+   # Đọc file CSV
+    with open(file_path, 'r', newline='', encoding='utf-8') as file:
+        csv_reader = csv.DictReader(file)
+               
+        # Lặp qua từng dòng trong file CSV
+        for row in csv_reader:
+            # Truy cập các trường dữ liệu bằng tên cột
+            field1 = row['Mabenhnhan']   
+            set_date2(driver,"dbFrom",dateSelect)
+            set_date2(driver,"dbTo",dateSelect)
+            get_patient_data(field1,driver) 
+            # 2. Dừng 3 giây
+            time.sleep(3)
+            # 3. Đóng tab và quay về web page trước
+            driver.quit()
+            print("Đã quay về trang web ban đầu") 
+            # ... và các trường khác
+            # Xử lý dữ liệu theo nhu cầu
 
-    # 1. Mở tab mới có link web
-    new_url = "http://192.168.0.65:8180/#menu=29&action=168"  # Thay thế bằng URL bạn muốn mở
-    driver.execute_script(f"window.open('{new_url}');")
-
-    # Chuyển focus sang tab mới
-    new_window = [window for window in driver.window_handles if window != original_window][0]
-    driver.switch_to.window(new_window)
-    
-    get_patient_data(paintedId,driver) 
-    # 2. Dừng 3 giây
-    time.sleep(3)
-
-    # 3. Đóng tab và quay về web page trước
-    driver.close()
-    driver.switch_to.window(original_window)
-
-    print("Đã quay về trang web ban đầu") 
+   
   
 
 root = Tk()
