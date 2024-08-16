@@ -167,9 +167,9 @@ def login():
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         # #cải tiến
-        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
@@ -787,6 +787,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                         print(f"nhánh {len(data_row)}: {text}")
                         if len(data_row) == 2:   
                            numberIDBenhNhan = text
+                           doc_chidinh_CLS(numberIDBenhNhan,driver)
                         if len(data_row) == 7:
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
@@ -1124,6 +1125,97 @@ def Csv_To_Excel(csv_filename):
     except Exception as e:
         print(f"Lỗi chuyển đổi CSV sang file Excel: {e}")
         return False
+    
+def choose_csv_file():    
+    file_path = filedialog.askopenfilename(
+        title="Chọn file CSV",
+        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+    )
+    
+    if file_path:
+        print(f"File đã chọn: {file_path}")
+        return file_path
+    else:
+        print("Không có file nào được chọn.")
+        return None
+
+
+def get_patient_data(patient_id, driver):
+    try:
+        # Mở trang web
+       
+
+        # Tìm trường nhập mã bệnh nhân và nhập dữ liệu
+        patient_input = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "txtPatient"))
+        )
+        patient_input.clear()
+        patient_input.send_keys(patient_id)
+      
+        
+          # Tìm và nhấp vào nút tìm kiếm
+        search_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "btnSearch"))
+        )
+        search_button.click()
+
+        # Đợi cho kết quả tải xong (bạn có thể cần điều chỉnh selector này)
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "resultContainer"))
+        )
+
+        # Tìm tất cả các trường input
+        inputs = driver.find_elements(By.TAG_NAME, "input")
+
+        # Lưu trữ dữ liệu
+        patient_data = {}
+        for input_field in inputs:
+            input_id = input_field.get_attribute("id")
+            input_value = input_field.get_attribute("value")
+            if input_id and input_value:
+                patient_data[input_id] = input_value
+
+        return patient_data
+
+    except TimeoutException:
+        print("Trang web mất quá nhiều thời gian để phản hồi")
+        return None
+
+    finally:
+        driver.quit()
+
+def doc_chidinh_CLS(paintedId,driver):
+    # #CHỌN FILE 
+    # urlfilecsv = choose_csv_file()
+    # print(f"đường dẫn{urlfilecsv}")
+    
+    # #READ FILE CSV TRUOC SAU ĐÓ ĐÁNH DẤU 
+    # #lấy tổng  
+    # #LẶP QUA VÒNG LẶP 
+   # Giả sử driver đã được khởi tạo và đang ở trang web ban đầu
+# driver = webdriver.Chrome()  # hoặc trình duyệt khác tùy bạn sử dụng
+
+    # Lưu handle của cửa sổ hiện tại
+    original_window = driver.current_window_handle
+
+    # 1. Mở tab mới có link web
+    new_url = "http://192.168.0.65:8180/#menu=29&action=168"  # Thay thế bằng URL bạn muốn mở
+    driver.execute_script(f"window.open('{new_url}');")
+
+    # Chuyển focus sang tab mới
+    new_window = [window for window in driver.window_handles if window != original_window][0]
+    driver.switch_to.window(new_window)
+    
+    get_patient_data(paintedId,driver) 
+    # 2. Dừng 3 giây
+    time.sleep(3)
+
+    # 3. Đóng tab và quay về web page trước
+    driver.close()
+    driver.switch_to.window(original_window)
+
+    print("Đã quay về trang web ban đầu") 
+  
 
 root = Tk()
 root.title("Tkinter ComboBox Example")
@@ -1168,6 +1260,8 @@ button.pack(pady=10)
 button = ttk.Button(root, text="Get data final many image", command=get_data_image_final, width=10)
 button.pack(pady=10)
 
+button = ttk.Button(root, text="lấy chỉ định khám ",command=doc_chidinh_CLS,width=10)
+button.pack(pady=10)
 # Start the Tkinter event loop
 root.mainloop()
 
