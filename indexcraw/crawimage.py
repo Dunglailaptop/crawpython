@@ -1223,12 +1223,20 @@ def get_patient_data(patient_id, driver):
         driver.quit()
 
 def doc_chidinh_CLS():
+    global dateSelect
     driver = login(2) 
     file_path = filedialog.askopenfilename(
         title="Chọn file CSV",
         filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
     )
-
+    namefolder = os.path.basename(file_path)
+    print(f"ten file csv: {namefolder}")
+    date = namefolder.split("_")[-1]
+    date = date.split(".")[0]
+    formatdate = datetime.strptime(date, "%d-%m-%Y")
+    convert = formatdate.strftime("%d/%m/%Y")
+    dateSelect = convert
+    patient_ids = []
    # Đọc file CSV
     with open(file_path, 'r', newline='', encoding='utf-8') as file:
         csv_reader = csv.DictReader(file)
