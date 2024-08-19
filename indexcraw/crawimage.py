@@ -188,9 +188,9 @@ def login(type):
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         # #cải tiến
-        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
@@ -1156,9 +1156,47 @@ def get_patient_data(patient_id, driver):
         description = divprocess.find_element(By.ID,"description").text
         ketluan = divprocess.find_element(By.ID,"conclusion").text
         KyThuat = divprocess.find_element(By.ID,"technical").text
-        print(f"mô tả:{description}")
-        print(f"ket luan:{ketluan}")
-        print(f"ky thuat: {KyThuat}")
+        DeNghi = divprocess.find_element(By.ID,"comments").text
+        ChuanDoan = divprocess.find_element(By.ID,"diagnosis").text
+        NoiChiDinh = divprocess.find_element(By.ID,"department").get_attribute('value')
+        BacSiChiDinh = divprocess.find_element(By.ID,"provider").get_attribute('value')
+        
+        DivMauKetQua = divprocess.find_element(By.ID,"temp")
+        MauKetQua = DivMauKetQua.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
+        
+        DivThietBi = divprocess.find_element(By.ID,"device")
+        ThietBi = DivThietBi.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
+        
+        # thông tin thiết bị
+        MaAnhDICOM = divprocess.find_element(By.ID,"accessionId").get_attribute('value')
+        
+        DivNoiThucHien = divprocess.find_element(By.ID,"performedDepartment")
+        NoiThucHien = DivNoiThucHien.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
+        
+        DivBSDocKetQua = divprocess.find_element(By.ID,"performedProvider")
+        BSDocKetQua = DivBSDocKetQua.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
+        
+        DivKTVThucHien = divprocess.find_element(By.ID,"technician")
+        KTVThucHien = DivKTVThucHien.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
+        
+        MaPhieuChiDinh = divprocess.find_element(By.ID,"resultCode").get_attribute('value')
+        
+        print(f"====chidinh-benhnhan:{patient_id}====")
+        print(f"mô tả: ===(\n{description})===")
+        print(f"+==ket luan:{ketluan}")
+        print(f"+==ky thuat: {KyThuat}")
+        print(f"+==chuẩn đoán: {ChuanDoan}")
+        print(f"+==Đề nghị: {DeNghi}")
+        print(f"+==Nơi chỉ định: {NoiChiDinh}")
+        print(f"+==Bác sỉ chỉ định: {BacSiChiDinh}")
+        print(f"+==Mẫu kết quả: {MauKetQua}")
+        print(f"+==Thiết bị: {ThietBi}")
+        print(f"==>Thông tin phiếu=============")
+        print(f"+==Nơi thực hiện: {NoiThucHien}")
+        print(f"+==Bác sĩ đọc kết quả: {BSDocKetQua}")
+        print(f"+==Khu vực thực hiện: {KTVThucHien}")
+        print(f"+==Mã phiếu chỉ định:{MaPhieuChiDinh}")
+        print("==========================")
     try:
         # Mở trang web
         
@@ -1190,7 +1228,7 @@ def get_patient_data(patient_id, driver):
         # Iterate through each row and extract the data
         for row in rows:
             row.click()
-            getdatainchidinh()
+           
             # Extract data from each cell
             cells = row.find_elements(By.TAG_NAME, "td")
             if cells:
@@ -1200,15 +1238,7 @@ def get_patient_data(patient_id, driver):
                 patient_name = cells[0].find_element(By.CLASS_NAME, "patient-name").text
                 service_count = cells[0].find_element(By.CLASS_NAME, "service-count").text
                 service_name = cells[0].find_element(By.CLASS_NAME, "service-name").text
-                  
-                # Print or process the extracted data
-                print(f"Patient ID: {patient_id}")
-                print(f"Order Date: {order_date}")
-                print(f"Order Number: {order_num}")
-                print(f"Patient Name: {patient_name}")
-                print(f"Service Count: {service_count}")
-                print(f"Service Name: {service_name}")
-                print("---")
+                getdatainchidinh()
         # Lưu trữ dữ liệu
         patient_data = {}
     
@@ -1237,25 +1267,28 @@ def doc_chidinh_CLS():
     convert = formatdate.strftime("%d/%m/%Y")
     dateSelect = convert
     patient_ids = []
+    csv_readers = []
    # Đọc file CSV
     with open(file_path, 'r', newline='', encoding='utf-8') as file:
         csv_reader = csv.DictReader(file)
-               
-        # Lặp qua từng dòng trong file CSV
         for row in csv_reader:
-            # Truy cập các trường dữ liệu bằng tên cột
-            field1 = row['Mabenhnhan']   
-            set_date2(driver,"dbFrom",dateSelect)
-            set_date2(driver,"dbTo",dateSelect)
-            get_patient_data(field1,driver) 
-            # 2. Dừng 3 giây
-            time.sleep(3)
-            # 3. Đóng tab và quay về web page trước
+            csv_readers.append(row)
+    # Lặp qua từng dòng trong file CSV
+    for row in csv_readers:
+        # Truy cập các trường dữ liệu bằng tên cột
+        field1 = row['Mabenhnhan']   
+        set_date2(driver,"dbFrom",dateSelect)
+        set_date2(driver,"dbTo",dateSelect)
+        get_patient_data(field1,driver) 
+        # 2. Dừng 3 giây
+        time.sleep(3)
+        # 3. Đóng tab và quay về web page trước
+        if driver:
             driver.quit()
-            print("Đã quay về trang web ban đầu") 
-            # ... và các trường khác
-            # Xử lý dữ liệu theo nhu cầu
-
+            driver = login(2)
+        print("Đã quay về trang web ban đầu") 
+        # ... và các trường khác
+        # Xử lý dữ liệu theo nhu cầu
    
   
 
