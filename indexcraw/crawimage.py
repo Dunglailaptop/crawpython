@@ -188,9 +188,9 @@ def login(type):
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         # #cải tiến
-        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
@@ -1150,8 +1150,8 @@ def choose_csv_file():
         return None
 
 
-def get_patient_data(patient_id, driver):
-    def getdatainchidinh():
+def get_patient_data(patient_id, driver,number):
+    def getdatainchidinh(numberRow):
         divprocess = driver.find_element(By.ID,"processEdit")
         description = divprocess.find_element(By.ID,"description").text
         ketluan = divprocess.find_element(By.ID,"conclusion").text
@@ -1181,7 +1181,7 @@ def get_patient_data(patient_id, driver):
         
         MaPhieuChiDinh = divprocess.find_element(By.ID,"resultCode").get_attribute('value')
         
-        print(f"====chidinh-benhnhan:{patient_id}====")
+        print(f"====chidinh-số thứ tự:{number}-dòng:{numberRow}-Mabenhnhan:{patient_id}====")
         print(f"mô tả: ===(\n{description})===")
         print(f"+==ket luan:{ketluan}")
         print(f"+==ky thuat: {KyThuat}")
@@ -1197,9 +1197,9 @@ def get_patient_data(patient_id, driver):
         print(f"+==Khu vực thực hiện: {KTVThucHien}")
         print(f"+==Mã phiếu chỉ định:{MaPhieuChiDinh}")
         print("==========================")
-    try:
-        # Mở trang web
-        
+    def setup():
+         # Mở trang web
+        time.sleep(3)
 
         # Tìm trường nhập mã bệnh nhân và nhập dữ liệu
         patient_input = WebDriverWait(driver, 10).until(
@@ -1214,21 +1214,26 @@ def get_patient_data(patient_id, driver):
             EC.element_to_be_clickable((By.ID, "btnSearch"))
         )
         search_button.click()
-
+        time.sleep(1)
        
 
                 # Wait for the table to be present
         table = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "table-striped"))
         )
-
+      
         # Find all rows in the table
         rows = table.find_elements(By.TAG_NAME, "tr")
-
+        return rows
+    try:
+        time.sleep(2)
+        rows = setup()
+        
+        numberRow = 0
         # Iterate through each row and extract the data
         for row in rows:
-            row.click()
-           
+            ActionChains(driver).move_to_element(row).click().perform()
+            numberRow += 1
             # Extract data from each cell
             cells = row.find_elements(By.TAG_NAME, "td")
             if cells:
@@ -1238,19 +1243,13 @@ def get_patient_data(patient_id, driver):
                 patient_name = cells[0].find_element(By.CLASS_NAME, "patient-name").text
                 service_count = cells[0].find_element(By.CLASS_NAME, "service-count").text
                 service_name = cells[0].find_element(By.CLASS_NAME, "service-name").text
-                getdatainchidinh()
-        # Lưu trữ dữ liệu
-        patient_data = {}
-    
-
-        return patient_data
+                getdatainchidinh(numberRow)
+       
 
     except TimeoutException:
         print("Trang web mất quá nhiều thời gian để phản hồi")
         return None
 
-    finally:
-        driver.quit()
 
 def doc_chidinh_CLS():
     global dateSelect
@@ -1274,18 +1273,18 @@ def doc_chidinh_CLS():
         for row in csv_reader:
             csv_readers.append(row)
     # Lặp qua từng dòng trong file CSV
-    for row in csv_readers:
-        # Truy cập các trường dữ liệu bằng tên cột
-        field1 = row['Mabenhnhan']   
+    numberRow = 0
+    for index, row in enumerate(csv_readers, start=1):
+        if index % 20 == 0:
+            driver = login(2)
+        # Truy cập các trường dữ liệu bằng tên cột        
+        field1 = row['Mabenhnhan']
         set_date2(driver,"dbFrom",dateSelect)
         set_date2(driver,"dbTo",dateSelect)
-        get_patient_data(field1,driver) 
+        total = get_patient_data(field1,driver,index) 
         # 2. Dừng 3 giây
         time.sleep(3)
         # 3. Đóng tab và quay về web page trước
-        if driver:
-            driver.quit()
-            driver = login(2)
         print("Đã quay về trang web ban đầu") 
         # ... và các trường khác
         # Xử lý dữ liệu theo nhu cầu
@@ -1299,7 +1298,7 @@ root.title("Tkinter ComboBox Example")
 numberget = [0]
 # Đặt kích thước cho cửa sổ
 window_width = 400
-window_height = 250
+window_height = 300
 
 # Lấy kích thước màn hình
 screen_width = root.winfo_screenwidth()
