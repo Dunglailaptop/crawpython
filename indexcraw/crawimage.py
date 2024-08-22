@@ -1150,144 +1150,88 @@ def choose_csv_file():
         return None
 
 
-def get_patient_data(patient_id, driver,number):
-    def getdatainchidinh(numberRow):
-        divprocess = driver.find_element(By.ID,"processEdit")
-        description = divprocess.find_element(By.ID,"description").text
-        ketluan = divprocess.find_element(By.ID,"conclusion").text
-        KyThuat = divprocess.find_element(By.ID,"technical").text
-        DeNghi = divprocess.find_element(By.ID,"comments").text
-        ChuanDoan = divprocess.find_element(By.ID,"diagnosis").text
-        NoiChiDinh = divprocess.find_element(By.ID,"department").get_attribute('value')
-        BacSiChiDinh = divprocess.find_element(By.ID,"provider").get_attribute('value')
+def get_patient_data(patient_id, driver, number):
+    def get_data_in_chidinh(number_row):
+        div_process = driver.find_element(By.ID, "processEdit")
         
-        DivMauKetQua = divprocess.find_element(By.ID,"temp")
-        MauKetQua = DivMauKetQua.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
+        # Use a dictionary to store all the data
+        data = {
+            "description": div_process.find_element(By.ID, "description").text,
+            "ketluan": div_process.find_element(By.ID, "conclusion").text,
+            "KyThuat": div_process.find_element(By.ID, "technical").text,
+            "DeNghi": div_process.find_element(By.ID, "comments").text,
+            "ChuanDoan": div_process.find_element(By.ID, "diagnosis").text,
+            "NoiChiDinh": div_process.find_element(By.ID, "department").get_attribute('value'),
+            "BacSiChiDinh": div_process.find_element(By.ID, "provider").get_attribute('value'),
+            "MauKetQua": div_process.find_element(By.ID, "temp").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
+            "ThietBi": div_process.find_element(By.ID, "device").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
+            "MaAnhDICOM": div_process.find_element(By.ID, "accessionId").get_attribute('value'),
+            "NoiThucHien": div_process.find_element(By.ID, "performedDepartment").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
+            "BSDocKetQua": div_process.find_element(By.ID, "performedProvider").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
+            "KTVThucHien": div_process.find_element(By.ID, "technician").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
+            "MaPhieuChiDinh": div_process.find_element(By.ID, "resultCode").get_attribute('value')
+        }
         
-        DivThietBi = divprocess.find_element(By.ID,"device")
-        ThietBi = DivThietBi.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
-        
-        # thông tin thiết bị
-        MaAnhDICOM = divprocess.find_element(By.ID,"accessionId").get_attribute('value')
-        
-        DivNoiThucHien = divprocess.find_element(By.ID,"performedDepartment")
-        NoiThucHien = DivNoiThucHien.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
-        
-        DivBSDocKetQua = divprocess.find_element(By.ID,"performedProvider")
-        BSDocKetQua = DivBSDocKetQua.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
-        
-        DivKTVThucHien = divprocess.find_element(By.ID,"technician")
-        KTVThucHien = DivKTVThucHien.find_element(By.CSS_SELECTOR,"input").get_attribute('value')
-        
-        MaPhieuChiDinh = divprocess.find_element(By.ID,"resultCode").get_attribute('value')
-        
-        print(f"====chidinh-số thứ tự:{number}-dòng:{numberRow}-Mabenhnhan:{patient_id}====")
-        print(f"mô tả: ===(\n{description})===")
-        print(f"+==ket luan:{ketluan}")
-        print(f"+==ky thuat: {KyThuat}")
-        print(f"+==chuẩn đoán: {ChuanDoan}")
-        print(f"+==Đề nghị: {DeNghi}")
-        print(f"+==Nơi chỉ định: {NoiChiDinh}")
-        print(f"+==Bác sỉ chỉ định: {BacSiChiDinh}")
-        print(f"+==Mẫu kết quả: {MauKetQua}")
-        print(f"+==Thiết bị: {ThietBi}")
-        print(f"==>Thông tin phiếu=============")
-        print(f"+==Nơi thực hiện: {NoiThucHien}")
-        print(f"+==Bác sĩ đọc kết quả: {BSDocKetQua}")
-        print(f"+==Khu vực thực hiện: {KTVThucHien}")
-        print(f"+==Mã phiếu chỉ định:{MaPhieuChiDinh}")
+        print(f"====chidinh-số thứ tự:{number}-dòng:{number_row}-Mabenhnhan:{patient_id}====")
+        for key, value in data.items():
+            print(f"+==={key}: {value}")
         print("==========================")
-    def setup():
-         # Mở trang web
-        time.sleep(3)
 
-        # Tìm trường nhập mã bệnh nhân và nhập dữ liệu
-        patient_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "txtPatient"))
-        )
+    def setup():
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "txtPatient")))
+        patient_input = driver.find_element(By.ID, "txtPatient")
         patient_input.clear()
         patient_input.send_keys(patient_id)
-      
         
-          # Tìm và nhấp vào nút tìm kiếm
-        search_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "btnSearch"))
-        )
+        search_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "btnSearch")))
         search_button.click()
-        time.sleep(1)
-       
+        
+        table = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "table-striped")))
+        return table.find_elements(By.TAG_NAME, "tr")
 
-                # Wait for the table to be present
-        table = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "table-striped"))
-        )
-      
-        # Find all rows in the table
-        rows = table.find_elements(By.TAG_NAME, "tr")
-        return rows
     try:
-        time.sleep(2)
         rows = setup()
         
-        numberRow = 0
-        # Iterate through each row and extract the data
-        for row in rows:
-            ActionChains(driver).move_to_element(row).click().perform()
-            numberRow += 1
-            # Extract data from each cell
+        for number_row, row in enumerate(rows, start=1):
+            time.sleep(2)
+            driver.execute_script("arguments[0].scrollIntoView(true);", row)
+            driver.execute_script("arguments[0].click();", row)
             cells = row.find_elements(By.TAG_NAME, "td")
             if cells:
-                patient_id = cells[0].find_element(By.CLASS_NAME, "patient-id").text
-                order_date = cells[0].find_element(By.CLASS_NAME, "order-date").text
-                order_num = cells[0].find_element(By.CLASS_NAME, "order-num").text
-                patient_name = cells[0].find_element(By.CLASS_NAME, "patient-name").text
-                service_count = cells[0].find_element(By.CLASS_NAME, "service-count").text
-                service_name = cells[0].find_element(By.CLASS_NAME, "service-name").text
-                getdatainchidinh(numberRow)
-       
-
+                patient_info = {
+                    "patient_id": cells[0].find_element(By.CLASS_NAME, "patient-id").text,
+                    "order_date": cells[0].find_element(By.CLASS_NAME, "order-date").text,
+                    "order_num": cells[0].find_element(By.CLASS_NAME, "order-num").text,
+                    "patient_name": cells[0].find_element(By.CLASS_NAME, "patient-name").text,
+                    "service_count": cells[0].find_element(By.CLASS_NAME, "service-count").text,
+                    "service_name": cells[0].find_element(By.CLASS_NAME, "service-name").text
+                }
+                print(f"Patient Info: {patient_info}")
+                get_data_in_chidinh(number_row)
     except TimeoutException:
         print("Trang web mất quá nhiều thời gian để phản hồi")
         return None
 
-
 def doc_chidinh_CLS():
-    global dateSelect
-    driver = login(2) 
-    file_path = filedialog.askopenfilename(
-        title="Chọn file CSV",
-        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
-    )
-    namefolder = os.path.basename(file_path)
-    print(f"ten file csv: {namefolder}")
-    date = namefolder.split("_")[-1]
-    date = date.split(".")[0]
-    formatdate = datetime.strptime(date, "%d-%m-%Y")
-    convert = formatdate.strftime("%d/%m/%Y")
-    dateSelect = convert
-    patient_ids = []
-    csv_readers = []
-   # Đọc file CSV
+    driver = login(2)  # Assuming login function is defined elsewhere
+    file_path = filedialog.askopenfilename(title="Chọn file CSV", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+    
+    date = os.path.basename(file_path).split("_")[-1].split(".")[0]
+    date_select = datetime.strptime(date, "%d-%m-%Y").strftime("%d/%m/%Y")
+    
     with open(file_path, 'r', newline='', encoding='utf-8') as file:
-        csv_reader = csv.DictReader(file)
-        for row in csv_reader:
-            csv_readers.append(row)
-    # Lặp qua từng dòng trong file CSV
-    numberRow = 0
-    for index, row in enumerate(csv_readers, start=1):
+        csv_reader = list(csv.DictReader(file))
+    
+    for index, row in enumerate(csv_reader, start=1):
         if index % 20 == 0:
+            driver.quit()
             driver = login(2)
-        # Truy cập các trường dữ liệu bằng tên cột        
-        field1 = row['Mabenhnhan']
-        set_date2(driver,"dbFrom",dateSelect)
-        set_date2(driver,"dbTo",dateSelect)
-        total = get_patient_data(field1,driver,index) 
-        # 2. Dừng 3 giây
+        
+        set_date2(driver, "dbFrom", date_select)
+        set_date2(driver, "dbTo", date_select)
+        get_patient_data(row['Mabenhnhan'], driver, index)
         time.sleep(3)
-        # 3. Đóng tab và quay về web page trước
-        print("Đã quay về trang web ban đầu") 
-        # ... và các trường khác
-        # Xử lý dữ liệu theo nhu cầu
+        print("Đã quay về trang web ban đầu")
    
   
 
