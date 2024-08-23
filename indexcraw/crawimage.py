@@ -1191,6 +1191,8 @@ def get_patient_data(patient_id, driver, number):
 
     try:
         rows = setup()
+        if not rows:
+            return  # Exit if setup fails
         
         for number_row, row in enumerate(rows, start=1):
             time.sleep(2)
