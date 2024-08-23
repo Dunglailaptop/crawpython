@@ -1194,8 +1194,14 @@ def get_patient_data(patient_id, driver, number):
         
         for number_row, row in enumerate(rows, start=1):
             time.sleep(2)
-            driver.execute_script("arguments[0].scrollIntoView(true);", row)
-            driver.execute_script("arguments[0].click();", row)
+              # Try to scroll into view and click with error handling
+            try:
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});", row)
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(row))
+                row.click()
+            except (StaleElementReferenceException) as e:
+                print(f"Encountered an issue with row {number_row}: {e}")
+                continue
             cells = row.find_elements(By.TAG_NAME, "td")
             if cells:
                 patient_info = {
@@ -1207,6 +1213,7 @@ def get_patient_data(patient_id, driver, number):
                     "service_name": cells[0].find_element(By.CLASS_NAME, "service-name").text
                 }
                 print(f"Patient Info: {patient_info}")
+                time.sleep(1)
                 get_data_in_chidinh(number_row)
     except TimeoutException:
         print("Trang web mất quá nhiều thời gian để phản hồi")
