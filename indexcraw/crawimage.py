@@ -188,9 +188,9 @@ def login(type):
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         # #cải tiến
-        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
