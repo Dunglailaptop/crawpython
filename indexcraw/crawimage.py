@@ -613,7 +613,7 @@ def getdatacsv(driver):
     data_header = extract_header_data(driver)
     data_header.insert(0,"STT")
     data_header.insert(1,"PAGE")
-    data_header.insert(2,"ChiDinhKham")
+    data_header.insert(2,"KETQUACHIDINHKHAM")
     date = datetime.strptime(dateSelect,"%d/%m/%Y")
     formatted_date = date.strftime("%d-%m-%Y")
     csv_filenames = os.path.join(urlFolder, f"Cachup_data_{formatted_date}.csv")
@@ -770,12 +770,12 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
         total_press = existing_records
         start_index = total_press % 80
         number = total_press + 1
-        
+        ketquakhamchidinh = ""
         number_now = 0
         for row in rows[start_index:]:
             number_now += 1
             cols = row.find_elements(By.TAG_NAME, 'td')
-            data_row = [number,page]
+            data_row = [number,page,ketquakhamchidinh]
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
@@ -798,7 +798,6 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                         print(f"nhánh {len(data_row)}: {text}")
                         if len(data_row) == 2:   
                            numberIDBenhNhan = text
-                        #    doc_chidinh_CLS(numberIDBenhNhan,driver)
                         if len(data_row) == 7:
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
@@ -837,6 +836,10 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             rows = locate_table(driver)
                             time.sleep(0.5)
             print("===============================")
+            print("==========lấy chỉ định khám==========")
+            # for row in data_row:
+            #     doc_chidinh_CLS(row["Mabenhnhan"],driver)
+                
             # # Ghi dữ liệu tạm thời vào file CSV
             print(f"Có quyền ghi vào thư mục: {os.access(os.path.dirname(csv_filenames), os.W_OK)}")
             with open(csv_filenames, mode='a', newline='', encoding='utf-8') as file:
@@ -852,7 +855,8 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
         return data_array, process_edit_data, number_now
     
     data_array_all, process_edit_data, numberrunget = get_row_data(page)
- 
+    print(data_array_all)
+    
     return numberrunget,csv_filenames 
 #xử lý ngoại lệ
 def login_again(max_retries=3):
@@ -1152,7 +1156,7 @@ def choose_csv_file():
         return None
 
 
-def get_patient_data(patient_id, driver, number):
+def get_patient_data(patient_id, driver):
     def get_data_in_chidinh(number_row):
         div_process = driver.find_element(By.ID, "processEdit")
         
@@ -1173,8 +1177,7 @@ def get_patient_data(patient_id, driver, number):
             "KTVThucHien": div_process.find_element(By.ID, "technician").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
             "MaPhieuChiDinh": div_process.find_element(By.ID, "resultCode").get_attribute('value')
         }
-        
-        print(f"====chidinh-số thứ tự:{number}-dòng:{number_row}-Mabenhnhan:{patient_id}====")
+        print(f"====chidinh-số thứ tự:-dòng:{number_row}-Mabenhnhan:{patient_id}====")
         print(data)
         for key, value in data.items():
             print(f"+==={key}: {value}")
@@ -1263,26 +1266,13 @@ def get_patient_data(patient_id, driver, number):
         print("Trang web mất quá nhiều thời gian để phản hồi")
         return None
 
-def doc_chidinh_CLS():
-    driver = login(2)  # Assuming login function is defined elsewhere
-    file_path = filedialog.askopenfilename(title="Chọn file CSV", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
-    
-    date = os.path.basename(file_path).split("_")[-1].split(".")[0]
-    date_select = datetime.strptime(date, "%d-%m-%Y").strftime("%d/%m/%Y")
-    
-    with open(file_path, 'r', newline='', encoding='utf-8') as file:
-        csv_reader = list(csv.DictReader(file))
-    
-    for index, row in enumerate(csv_reader, start=1):
-        if index % 20 == 0:
-            driver.quit()
-            driver = login(2)
-        
-        set_date2(driver, "dbFrom", date_select)
-        set_date2(driver, "dbTo", date_select)
-        get_patient_data(row['Mabenhnhan'], driver, index)
-        time.sleep(3)
-        print("Đã quay về trang web ban đầu")
+def doc_chidinh_CLS(MaBenhNhan,driver):
+    global dateSelect
+    set_date2(driver, "dbFrom", dateSelect)
+    set_date2(driver, "dbTo", dateSelect)
+    get_patient_data(MaBenhNhan, driver)
+    time.sleep(3)
+    print("Đã quay về trang web ban đầu")
    
   
 
