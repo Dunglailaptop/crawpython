@@ -35,7 +35,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException,NoSuchElementException,ElementClickInterceptedException, TimeoutException
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from unidecode import unidecode 
 from tkinter import ttk, filedialog, Tk
@@ -187,7 +187,7 @@ def login(type):
         
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        # #cải tiến
+        # # #cải tiến
         options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
         # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
         options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
@@ -613,6 +613,7 @@ def getdatacsv(driver):
     data_header = extract_header_data(driver)
     data_header.insert(0,"STT")
     data_header.insert(1,"PAGE")
+    data_header.insert(2,"ChiDinhKham")
     date = datetime.strptime(dateSelect,"%d/%m/%Y")
     formatted_date = date.strftime("%d-%m-%Y")
     csv_filenames = os.path.join(urlFolder, f"Cachup_data_{formatted_date}.csv")
@@ -844,6 +845,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                     writer.writeheader()
                 writer.writerows([{data_header[i]: data_row[i] for i in range(len(data_header))}])
             data_array.append(data_row)
+            
             # Csv_To_Excel(csv_filenames)
             # if number <= 10:   
             #    getData_Image(cols,number,numberIDBenhNhan)
@@ -1173,10 +1175,46 @@ def get_patient_data(patient_id, driver, number):
         }
         
         print(f"====chidinh-số thứ tự:{number}-dòng:{number_row}-Mabenhnhan:{patient_id}====")
+        print(data)
         for key, value in data.items():
             print(f"+==={key}: {value}")
         print("==========================")
+    def find_and_click_row(driver, number_row):
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
+                # Wait for the table to be present
+                table = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "table-striped"))
+                )
+                
+                # Find all rows
+                rows = table.find_elements(By.CLASS_NAME, "j-listitem")
+                
+                if number_row <= len(rows):
+                    row = rows[number_row - 1]
+                    
+                    # Scroll the row into view
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});", row)
+                    
+                    # Wait for the row to be clickable
+                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, row.get_attribute('id'))))
+                    
+                    # Click the row
+                    row.click()
+                    return True
+                else:
+                    print(f"Row {number_row} not found")
+                    return False
+            except (StaleElementReferenceException, ElementClickInterceptedException, TimeoutException, NoSuchElementException) as e:
+                print(f"Attempt {attempt + 1} failed for row {number_row}: {e}")
+                if attempt == max_attempts - 1:
+                    print(f"Failed to click row {number_row} after {max_attempts} attempts")
+                    return False
+                driver.refresh()  # Refresh the page before retrying
+                time.sleep(2)  # Wait for the page to reload
 
+   
     def setup():
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "txtPatient")))
         patient_input = driver.find_element(By.ID, "txtPatient")
@@ -1186,37 +1224,41 @@ def get_patient_data(patient_id, driver, number):
         search_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "btnSearch")))
         search_button.click()
         
-        table = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "table-striped")))
-        return table.find_elements(By.TAG_NAME, "tr")
+        # Wait for the table to be present
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "table-striped")))
 
     try:
-        rows = setup()
-        if not rows:
-            return  # Exit if setup fails
+        setup()
         
-        for number_row, row in enumerate(rows, start=1):
-            time.sleep(2)
-              # Try to scroll into view and click with error handling
-            try:
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});", row)
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(row))
-                row.click()
-            except (StaleElementReferenceException) as e:
-                print(f"Encountered an issue with row {number_row}: {e}")
-                continue
-            cells = row.find_elements(By.TAG_NAME, "td")
-            if cells:
-                patient_info = {
-                    "patient_id": cells[0].find_element(By.CLASS_NAME, "patient-id").text,
-                    "order_date": cells[0].find_element(By.CLASS_NAME, "order-date").text,
-                    "order_num": cells[0].find_element(By.CLASS_NAME, "order-num").text,
-                    "patient_name": cells[0].find_element(By.CLASS_NAME, "patient-name").text,
-                    "service_count": cells[0].find_element(By.CLASS_NAME, "service-count").text,
-                    "service_name": cells[0].find_element(By.CLASS_NAME, "service-name").text
-                }
-                print(f"Patient Info: {patient_info}")
-                time.sleep(1)
-                get_data_in_chidinh(number_row)
+        # Get the total number of rows
+        table = driver.find_element(By.CLASS_NAME, "table-striped")
+        rows = table.find_elements(By.CLASS_NAME, "j-listitem")
+        total_rows = len(rows)
+        
+        for number_row in range(1, total_rows + 1):
+            if find_and_click_row(driver, number_row):
+                try:
+                    # Wait for the patient info to be present
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "service-info"))
+                    )
+                    
+                    # Get patient info
+                    patient_info = {
+                        "patient_id": driver.find_element(By.CLASS_NAME, "patient-id").text,
+                        "order_date": driver.find_element(By.CLASS_NAME, "order-date").text,
+                        "order_num": driver.find_element(By.CLASS_NAME, "order-num").text,
+                        "patient_name": driver.find_element(By.CLASS_NAME, "patient-name").text,
+                        "service_count": driver.find_element(By.CLASS_NAME, "service-count").text,
+                        "service_name": driver.find_element(By.CLASS_NAME, "service-name").text
+                    }
+                    print(f"Patient Info: {patient_info}")
+                    time.sleep(1)
+                    get_data_in_chidinh(number_row)
+                except (TimeoutException, NoSuchElementException) as e:
+                    print(f"Error getting patient info for row {number_row}: {e}")
+            else:
+                print(f"Skipping row {number_row} due to click failure")
     except TimeoutException:
         print("Trang web mất quá nhiều thời gian để phản hồi")
         return None
