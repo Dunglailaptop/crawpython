@@ -188,9 +188,9 @@ def login(type):
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         # # #cải tiến
-        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
@@ -723,11 +723,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
     time.sleep(1)
 
     
-    
-   
 
-   
-    
     def click_element(element):
         try:
             # Đợi cho đến khi phần tử có thể click được
@@ -796,13 +792,13 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                         except:
                             pass
                         print(f"nhánh {len(data_row)}: {text}")
-                        if len(data_row) == 2:   
+                        if len(data_row) == 3:   
                            numberIDBenhNhan = text
-                        if len(data_row) == 7:
+                        if len(data_row) == 8:
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
-                                if int(valueImage) <= 3:  # Thay đổi từ 5 thành 3
+                                if int(valueImage) <= 1000:  # Thay đổi từ 5 thành 3
                                     cols[0].click()
                                     getData_Image(cols, number, numberIDBenhNhan,driver)
                                     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
@@ -837,8 +833,17 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             time.sleep(0.5)
             print("===============================")
             print("==========lấy chỉ định khám==========")
-            # for row in data_row:
-            #     doc_chidinh_CLS(row["Mabenhnhan"],driver)
+            for row in data_row:
+                patient_id = row[3]  # Assuming patient ID is at index 3
+                if driver:
+                    url = "http://192.168.0.65:8180/#menu=29&action=168"
+                    driver.get(url)
+                    print("thực hiện chỉ định")
+                    set_date2(driver, "dbFrom", dateSelect)
+                    set_date2(driver, "dbTo", dateSelect)
+                    get_patient_data(patient_id, driver)
+                    time.sleep(3)
+                print("Đã quay về trang web ban đầu")
                 
             # # Ghi dữ liệu tạm thời vào file CSV
             print(f"Có quyền ghi vào thư mục: {os.access(os.path.dirname(csv_filenames), os.W_OK)}")
@@ -1266,13 +1271,9 @@ def get_patient_data(patient_id, driver):
         print("Trang web mất quá nhiều thời gian để phản hồi")
         return None
 
-def doc_chidinh_CLS(MaBenhNhan,driver):
-    global dateSelect
-    set_date2(driver, "dbFrom", dateSelect)
-    set_date2(driver, "dbTo", dateSelect)
-    get_patient_data(MaBenhNhan, driver)
-    time.sleep(3)
-    print("Đã quay về trang web ban đầu")
+
+
+   
    
   
 
