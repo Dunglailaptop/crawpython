@@ -188,9 +188,9 @@ def login(type):
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         # # #cải tiến
-        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         # ===========
         # options.add_argument("--headless=new")
         # options.add_argument("--window-size=1920,1080")
@@ -798,7 +798,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
-                                if int(valueImage) <= 1000:  # Thay đổi từ 5 thành 3
+                                if int(valueImage) <= 20:  # Thay đổi từ 5 thành 3
                                     cols[0].click()
                                     getData_Image(cols, number, numberIDBenhNhan,driver)
                                     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
@@ -832,18 +832,37 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             rows = locate_table(driver)
                             time.sleep(0.5)
             print("===============================")
-            print("==========lấy chỉ định khám==========")
-            for row in data_row:
-                patient_id = row[3]  # Assuming patient ID is at index 3
-                if driver:
-                    url = "http://192.168.0.65:8180/#menu=29&action=168"
-                    driver.get(url)
-                    print("thực hiện chỉ định")
-                    set_date2(driver, "dbFrom", dateSelect)
-                    set_date2(driver, "dbTo", dateSelect)
-                    get_patient_data(patient_id, driver)
-                    time.sleep(3)
-                print("Đã quay về trang web ban đầu")
+           
+            original_window = driver.current_window_handle
+            patient_id = data_row[3]
+            loaixetnghiem = data_row[6]
+            if driver:
+                driver.execute_script("window.open('');")
+                driver.switch_to.window(driver.window_handles[-1])
+                url = {
+                    "US": "http://192.168.0.65:8180/#menu=29&action=168",
+                    "CR": "http://192.168.0.65:8180/#menu=23&action=130",
+                    "MR": "http://192.168.0.65:8180/#menu=20&action=159",
+                    "CT": "http://192.168.0.65:8180/#menu=17&action=133"
+                }.get(loaixetnghiem, "")
+                driver.get(url)
+                print(f"Thực hiện chỉ định cho bệnh nhân ID: {patient_id}")
+                try:
+                    datas = get_patient_data(patient_id, driver)
+                    print(f"Retrieved data: {datas}")
+                    data_row[2] = datas
+                    print(datas)
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.ID, "some-element-id"))
+                    )
+                except Exception as e:
+                    print(f"Lỗi khi xử lý bệnh nhân {patient_id}")
+                finally:
+                    driver.close()
+                    driver.switch_to.window(original_window)
+                print(f"Đã hoàn thành xử lý cho bệnh nhân ID: {patient_id}")
+
+            print("Đã quay về trang web ban đầu và hoàn thành tất cả bệnh nhân")
                 
             # # Ghi dữ liệu tạm thời vào file CSV
             print(f"Có quyền ghi vào thư mục: {os.access(os.path.dirname(csv_filenames), os.W_OK)}")
@@ -1162,6 +1181,8 @@ def choose_csv_file():
 
 
 def get_patient_data(patient_id, driver):
+    global dateSelect
+    data_Array = []
     def get_data_in_chidinh(number_row):
         div_process = driver.find_element(By.ID, "processEdit")
         
@@ -1187,6 +1208,7 @@ def get_patient_data(patient_id, driver):
         for key, value in data.items():
             print(f"+==={key}: {value}")
         print("==========================")
+        return data
     def find_and_click_row(driver, number_row):
         max_attempts = 3
         for attempt in range(max_attempts):
@@ -1224,6 +1246,8 @@ def get_patient_data(patient_id, driver):
 
    
     def setup():
+        set_date2(driver, "dbFrom", dateSelect)
+        set_date2(driver, "dbTo", dateSelect)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "txtPatient")))
         patient_input = driver.find_element(By.ID, "txtPatient")
         patient_input.clear()
@@ -1237,7 +1261,7 @@ def get_patient_data(patient_id, driver):
 
     try:
         setup()
-        
+        time.sleep(1.5)
         # Get the total number of rows
         table = driver.find_element(By.CLASS_NAME, "table-striped")
         rows = table.find_elements(By.CLASS_NAME, "j-listitem")
@@ -1261,8 +1285,12 @@ def get_patient_data(patient_id, driver):
                         "service_name": driver.find_element(By.CLASS_NAME, "service-name").text
                     }
                     print(f"Patient Info: {patient_info}")
-                    time.sleep(1)
-                    get_data_in_chidinh(number_row)
+                    if patient_info["patient_id"] != None and patient_info["patient_id"] == patient_id:
+                        time.sleep(1)
+                        data = get_data_in_chidinh(number_row)
+                        data_Array.append(data)
+                    else:
+                        print("===rỗng không có kết quả===")
                 except (TimeoutException, NoSuchElementException) as e:
                     print(f"Error getting patient info for row {number_row}: {e}")
             else:
@@ -1270,6 +1298,7 @@ def get_patient_data(patient_id, driver):
     except TimeoutException:
         print("Trang web mất quá nhiều thời gian để phản hồi")
         return None
+    return data_Array
 
 
 
@@ -1320,8 +1349,8 @@ button.pack(pady=10)
 button = ttk.Button(root, text="Get data final many image", command=get_data_image_final, width=10)
 button.pack(pady=10)
 
-button = ttk.Button(root, text="lấy chỉ định khám ",command=doc_chidinh_CLS,width=10)
-button.pack(pady=10)
+# button = ttk.Button(root, text="lấy chỉ định khám ",command=doc_chidinh_CLS,width=10)
+# button.pack(pady=10)
 # Start the Tkinter event loop
 root.mainloop()
 
