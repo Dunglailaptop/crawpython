@@ -191,25 +191,7 @@ def login(type):
         options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
         # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
         options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
-        # ===========
-        # options.add_argument("--headless=new")
-        # options.add_argument("--window-size=1920,1080")
-        # options.add_argument("--disable-gpu")
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
-        # options.add_argument("--disable-extensions")
-        # options.add_argument("--disable-plugins")
-        # options.add_argument("--disable-software-rasterizer")
-        # options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-        #     # Thêm các tùy chọn để giảm tải CPU và bộ nhớ
-        # options.add_argument("--no-zygote")
-        # options.add_argument("--single-process")
-        # options.add_argument("--disable-setuid-sandbox")
-        # options.add_argument("--ignore-certificate-errors")
-        # options.add_argument("--disable-accelerated-2d-canvas")
-        # options.add_argument("--disable-gpu-sandbox")
-        # service = Service(chromedriver_path)
+        
         driver = webdriver.Chrome(options=options)
 
         # Open the website
@@ -775,7 +757,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
-            if number_now == 16:
+            if number_now == 5:
                 return data_array, process_edit_data, number_now
             for col in cols[1:]:
                 retry_count = 1
@@ -798,7 +780,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
-                                if int(valueImage) <= 20:  # Thay đổi từ 5 thành 3
+                                if int(valueImage) <= 5:  # Thay đổi từ 5 thành 3
                                     cols[0].click()
                                     getData_Image(cols, number, numberIDBenhNhan,driver)
                                     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
@@ -813,8 +795,19 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                                 else:
                                     print("ghi nhận lại bệnh nhân có nhiều ảnh từ 3 trở lên")
                                     print(f"Bỏ qua bệnh nhân {numberIDBenhNhan} vì có {valueImage} hình ảnh")
-                                    get_many_image(numberIDBenhNhan)
-                                    
+                                    cols[0].click()
+                                    getData_Image(cols, number, numberIDBenhNhan,driver)
+                                    print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
+                                    # actions = ActionChains(driver)
+                                    # actions.move_to_element(cols[0]).perform()
+                                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                                    # Hoặc cuộn đến phần tử cụ thể
+                                    element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
+                                    driver.execute_script("arguments[0].scrollIntoView(true);", element)
+                                    time.sleep(5)
+                                    cols[0].click()
+                                    # get_many_image(numberIDBenhNhan)
+                                    return data_array, process_edit_data, number_now
                             else:
                                 print(f"Giá trị không hợp lệ cho số lượng hình ảnh: {valueImage}")
                         data_row.append(text)
@@ -851,10 +844,6 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                     datas = get_patient_data(patient_id, driver)
                     print(f"Retrieved data: {datas}")
                     data_row[2] = datas
-                    print(datas)
-                    WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.ID, "some-element-id"))
-                    )
                 except Exception as e:
                     print(f"Lỗi khi xử lý bệnh nhân {patient_id}")
                 finally:
@@ -953,8 +942,9 @@ def main():
                 if driver:
                     items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup(driver, Stt, numberget,page)
                     Csv_To_Excel(csvfilenew)
-                    numberget += 15
-                    Stt += 15
+                    numbersst = items_extracted - 1
+                    numberget += numbersst
+                    Stt += numbersst
                     page = min(numberget // items_per_page, totalpage - 1)
                     print(f"number đếm hiện tại: {numberget}")
                     success = False
@@ -1203,11 +1193,11 @@ def get_patient_data(patient_id, driver):
             "KTVThucHien": div_process.find_element(By.ID, "technician").find_element(By.CSS_SELECTOR, "input").get_attribute('value'),
             "MaPhieuChiDinh": div_process.find_element(By.ID, "resultCode").get_attribute('value')
         }
-        print(f"====chidinh-số thứ tự:-dòng:{number_row}-Mabenhnhan:{patient_id}====")
-        print(data)
-        for key, value in data.items():
-            print(f"+==={key}: {value}")
-        print("==========================")
+        # print(f"====chidinh-số thứ tự:-dòng:{number_row}-Mabenhnhan:{patient_id}====")
+        # print(data)
+        # for key, value in data.items():
+        #     print(f"+==={key}: {value}")
+        # print("==========================")
         return data
     def find_and_click_row(driver, number_row):
         max_attempts = 3
@@ -1266,7 +1256,7 @@ def get_patient_data(patient_id, driver):
         table = driver.find_element(By.CLASS_NAME, "table-striped")
         rows = table.find_elements(By.CLASS_NAME, "j-listitem")
         total_rows = len(rows)
-        
+        print(f"tổng số hồ sơ tìm thấy là:{total_rows}")
         for number_row in range(1, total_rows + 1):
             if find_and_click_row(driver, number_row):
                 try:
@@ -1284,8 +1274,8 @@ def get_patient_data(patient_id, driver):
                         "service_count": driver.find_element(By.CLASS_NAME, "service-count").text,
                         "service_name": driver.find_element(By.CLASS_NAME, "service-name").text
                     }
-                    print(f"Patient Info: {patient_info}")
-                    if patient_info["patient_id"] != None and patient_info["patient_id"] == patient_id:
+                    # print(f"Patient Info: {patient_info}")
+                    if patient_info["patient_id"] == patient_id:
                         time.sleep(1)
                         data = get_data_in_chidinh(number_row)
                         data_Array.append(data)
