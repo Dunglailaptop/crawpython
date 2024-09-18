@@ -187,10 +187,10 @@ def login(type):
         
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        # # #cải tiến
-        options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        # # # #cải tiến
+        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
+        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
+        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         
         driver = webdriver.Chrome(options=options)
 
@@ -675,7 +675,7 @@ def getData_Image(cols, number, numberId,driver):
         )
         Button_showImage = div_Menu.find_element(By.ID, 'btnWebViewer')
         Button_showImage.click()
-        time.sleep(0.5)
+        time.sleep(3)
         div_Zoom = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".layout-menu-right button[title='Toàn màn hình']"))
         )
@@ -780,7 +780,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
-                                if int(valueImage) <= 5:  # Thay đổi từ 5 thành 3
+                                if int(valueImage) <= 2000:  # Thay đổi từ 5 thành 3
                                     cols[0].click()
                                     getData_Image(cols, number, numberIDBenhNhan,driver)
                                     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
@@ -826,32 +826,32 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             time.sleep(0.5)
             print("===============================")
            
-            original_window = driver.current_window_handle
-            patient_id = data_row[3]
-            loaixetnghiem = data_row[6]
-            if driver:
-                driver.execute_script("window.open('');")
-                driver.switch_to.window(driver.window_handles[-1])
-                url = {
-                    "US": "http://192.168.0.65:8180/#menu=29&action=168",
-                    "CR": "http://192.168.0.65:8180/#menu=23&action=130",
-                    "MR": "http://192.168.0.65:8180/#menu=20&action=159",
-                    "CT": "http://192.168.0.65:8180/#menu=17&action=133"
-                }.get(loaixetnghiem, "")
-                driver.get(url)
-                print(f"Thực hiện chỉ định cho bệnh nhân ID: {patient_id}")
-                try:
-                    datas = get_patient_data(patient_id, driver)
-                    print(f"Retrieved data: {datas}")
-                    data_row[2] = datas
-                except Exception as e:
-                    print(f"Lỗi khi xử lý bệnh nhân {patient_id}")
-                finally:
-                    driver.close()
-                    driver.switch_to.window(original_window)
-                print(f"Đã hoàn thành xử lý cho bệnh nhân ID: {patient_id}")
+            # original_window = driver.current_window_handle
+            # patient_id = data_row[3]
+            # loaixetnghiem = data_row[6]
+            # if driver:
+            #     driver.execute_script("window.open('');")
+            #     driver.switch_to.window(driver.window_handles[-1])
+            #     url = {
+            #         "US": "http://192.168.0.65:8180/#menu=29&action=168",
+            #         "CR": "http://192.168.0.65:8180/#menu=23&action=130",
+            #         "MR": "http://192.168.0.65:8180/#menu=20&action=159",
+            #         "CT": "http://192.168.0.65:8180/#menu=17&action=133"
+            #     }.get(loaixetnghiem, "")
+            #     driver.get(url)
+            #     print(f"Thực hiện chỉ định cho bệnh nhân ID: {patient_id}")
+            #     try:
+            #         datas = get_patient_data(patient_id, driver)
+            #         print(f"Retrieved data: {datas}")
+            #         data_row[2] = datas
+            #     except Exception as e:
+            #         print(f"Lỗi khi xử lý bệnh nhân {patient_id}")
+            #     finally:
+            #         driver.close()
+            #         driver.switch_to.window(original_window)
+            #     print(f"Đã hoàn thành xử lý cho bệnh nhân ID: {patient_id}")
 
-            print("Đã quay về trang web ban đầu và hoàn thành tất cả bệnh nhân")
+            # print("Đã quay về trang web ban đầu và hoàn thành tất cả bệnh nhân")
                 
             # # Ghi dữ liệu tạm thời vào file CSV
             print(f"Có quyền ghi vào thư mục: {os.access(os.path.dirname(csv_filenames), os.W_OK)}")
