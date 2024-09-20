@@ -174,7 +174,7 @@ def next_action(driver,area_data_url):
 
 # Function to initialize and log into the system
 def login(type):
-    global dateSelect
+    global dateSelect, urlFolder
     try:
         #khai báo thông số     
           # Ensure this path is correct
@@ -184,9 +184,26 @@ def login(type):
         password = "74777477"
         area_data_url = "http://192.168.0.65:8180/#menu=131&action=111"  
             
-        
+        download_dir = os.path.join(urlFolder)
+        os.makedirs(download_dir, exist_ok=True)
+
         # # # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
+        # prefs = {
+        #     "download.default_directory": download_dir,
+        #     "download.prompt_for_download": False,
+        #     "download.directory_upgrade": True,
+        #     "safebrowsing.enabled": True
+        # }
+        # options.add_experimental_option("prefs", prefs)
+        prefs = {"credentials_enable_service": False,
+                        "profile.password_manager_enabled": False}
+        options.add_experimental_option("prefs", prefs)
+        # options.add_argument("--allow-insecure-localhost")
+        # options.add_argument("--ignore-certificate-errors")
+        # options.add_argument("--disable-features=InsecureDownloadWarnings")
+        # options.add_argument("--disable-features=BlockInsecureDownloads")
+        options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         # # # #cải tiến
         # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
         # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
@@ -665,6 +682,28 @@ def get_series_data(number, numberId,driver):
 
     return series_data
 
+def getDownload(driver):
+    div_check_button_download = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, 'btnDownload'))
+    )
+    div_check_button_download.click()
+    #    # Chờ cho pop-up div xuất hiện (timeout sau 10 giây)
+    # popup = WebDriverWait(driver, 10).until(
+    #     EC.presence_of_element_located((By.ID, "cpwbzk"))
+    # )
+    
+    print("Pop-up div đã xuất hiện!")
+
+    # Chờ cho nút "btnSave" có thể nhấn được (timeout sau 10 giây)
+    button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.ID, "btnSave"))
+    )
+    
+    # Nhấn nút
+    button.click()
+    
+    print("Đã nhấn nút 'Lưu' thành công!")
+
 def getData_Image(cols, number, numberId,driver):
         # Get the first column data (assuming it's the ID or unique identifier)
         # cols[0].click()
@@ -780,34 +819,46 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                             print(f"mã bệnh nhân là: {numberIDBenhNhan}")
                             valueImage = text
                             if valueImage.isdigit():  # Kiểm tra xem valueImage có phải là số không
-                                if int(valueImage) <= 2000:  # Thay đổi từ 5 thành 3
-                                    cols[0].click()
-                                    getData_Image(cols, number, numberIDBenhNhan,driver)
-                                    print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
-                                    # actions = ActionChains(driver)
-                                    # actions.move_to_element(cols[0]).perform()
-                                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                                    # Hoặc cuộn đến phần tử cụ thể
-                                    element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
-                                    driver.execute_script("arguments[0].scrollIntoView(true);", element)
-                                    time.sleep(5)
-                                    cols[0].click()
-                                else:
-                                    print("ghi nhận lại bệnh nhân có nhiều ảnh từ 3 trở lên")
-                                    print(f"Bỏ qua bệnh nhân {numberIDBenhNhan} vì có {valueImage} hình ảnh")
-                                    cols[0].click()
-                                    getData_Image(cols, number, numberIDBenhNhan,driver)
-                                    print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
-                                    # actions = ActionChains(driver)
-                                    # actions.move_to_element(cols[0]).perform()
-                                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                                    # Hoặc cuộn đến phần tử cụ thể
-                                    element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
-                                    driver.execute_script("arguments[0].scrollIntoView(true);", element)
-                                    time.sleep(5)
-                                    cols[0].click()
-                                    # get_many_image(numberIDBenhNhan)
-                                    return data_array, process_edit_data, number_now
+                                cols[0].click()
+                                getDownload(driver)
+                                print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
+                                # actions = ActionChains(driver)
+                                # actions.move_to_element(cols[0]).perform()
+                                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                                # Hoặc cuộn đến phần tử cụ thể
+                                element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
+                                driver.execute_script("arguments[0].scrollIntoView(true);", element)
+                                time.sleep(5)
+                                cols[0].click()
+                              
+                                # if int(valueImage) <= 2000:  # Thay đổi từ 5 thành 3
+                                #     cols[0].click()
+                                #     getData_Image(cols, number, numberIDBenhNhan,driver)
+                                #     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
+                                #     # actions = ActionChains(driver)
+                                #     # actions.move_to_element(cols[0]).perform()
+                                #     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                                #     # Hoặc cuộn đến phần tử cụ thể
+                                #     element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
+                                #     driver.execute_script("arguments[0].scrollIntoView(true);", element)
+                                #     time.sleep(5)
+                                #     cols[0].click()
+                                # else:
+                                #     print("ghi nhận lại bệnh nhân có nhiều ảnh từ 3 trở lên")
+                                #     print(f"Bỏ qua bệnh nhân {numberIDBenhNhan} vì có {valueImage} hình ảnh")
+                                #     cols[0].click()
+                                #     getData_Image(cols, number, numberIDBenhNhan,driver)
+                                #     print(f"thẻ html của click: {cols[0].get_attribute('outerHTML')}")
+                                #     # actions = ActionChains(driver)
+                                #     # actions.move_to_element(cols[0]).perform()
+                                #     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                                #     # Hoặc cuộn đến phần tử cụ thể
+                                #     element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
+                                #     driver.execute_script("arguments[0].scrollIntoView(true);", element)
+                                #     time.sleep(5)
+                                #     cols[0].click()
+                                #     # get_many_image(numberIDBenhNhan)
+                                #     return data_array, process_edit_data, number_now
                             else:
                                 print(f"Giá trị không hợp lệ cho số lượng hình ảnh: {valueImage}")
                         data_row.append(text)
