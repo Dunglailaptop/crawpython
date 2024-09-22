@@ -155,8 +155,8 @@ def next_action(driver,area_data_url):
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom",dateSelect)
-    set_date2(driver, "dbTo", dateSelect)
+    set_date2(driver, "dbFrom","01/01/2023")
+    set_date2(driver, "dbTo", "01/01/2023")
     time.sleep(5)
 
         # Tìm phần tử có class "btns"
@@ -176,8 +176,6 @@ def next_action(driver,area_data_url):
 def login(type):
     global dateSelect, urlFolder
     try:
-        #khai báo thông số     
-          # Ensure this path is correct
         login_url = "http://192.168.0.65:8180/"
         area_data_url = ""
         username = "quyen.ngoq"
@@ -187,71 +185,57 @@ def login(type):
         download_dir = os.path.join(urlFolder)
         os.makedirs(download_dir, exist_ok=True)
 
-        # # # Initialize ChromeDriver
+        # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
-        # prefs = {
-        #     "download.default_directory": download_dir,
-        #     "download.prompt_for_download": False,
-        #     "download.directory_upgrade": True,
-        #     "safebrowsing.enabled": True
-        # }
-        # options.add_experimental_option("prefs", prefs)
         prefs = {"credentials_enable_service": False,
-                        "profile.password_manager_enabled": False}
+                 "profile.password_manager_enabled": False}
         options.add_experimental_option("prefs", prefs)
-        # options.add_argument("--allow-insecure-localhost")
-        # options.add_argument("--ignore-certificate-errors")
-        # options.add_argument("--disable-features=InsecureDownloadWarnings")
-        # options.add_argument("--disable-features=BlockInsecureDownloads")
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
-        # # # #cải tiến
-        # options.add_argument("--headless=new")  # Chạy trình duyệt trong chế độ headless
-        # # # chrome_options.add_argument("--disable-gpu")  # Tăng tốc độ trên các hệ điều hành không có GPU
-        # options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
+        options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
+        options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
+        options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
         
         driver = webdriver.Chrome(options=options)
 
-        # Open the website
+        # Mở website
         driver.get(login_url)
         driver.maximize_window()
+        # Sử dụng WebDriverWait để đảm bảo phần tử đã sẵn sàng
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "txtUsername")))
         
-        # Wait for the page to load
-        time.sleep(1)
-
-        # Find and enter username
+        # Nhập username
         username_input = driver.find_element(By.ID, "txtUsername")
         username_input.send_keys(username)
 
-        # Find and enter password
+        # Nhập password
         password_input = driver.find_element(By.ID, "txtPassword")
         password_input.send_keys(password)
 
-        # Find and click the login button
+        # Nhấp nút đăng nhập
         login_button = driver.find_element(By.ID, "btnLogin")
         login_button.click()
 
-        # Wait for login to complete
-        time.sleep(5)
+        # Chờ đợi cho đến khi trang hoàn tất load sau khi đăng nhập
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "btnSave")))
+        
+        # Nhấp nút save (nếu cần)
+        save_button = driver.find_element(By.ID, 'btnSave')
+        save_button.click()
 
-        # Click save button
-        save = driver.find_element(By.ID, "btnSave")
-        save.click()
-        time.sleep(3)
-        try:
-            if int(type) == 1:
-                next_action(driver,area_data_url)
-            else:
-                url = "http://192.168.0.65:8180/#menu=29&action=168"
-                driver.get(url)
-                print("thực hiện chỉ định")
-        except Exception as e:
-               print(f"====LỔI TÌM SEARC: {e}")
-        time.sleep(1)
-        print("===đăng nhập hoàn tất vô bảng dự liệu===")
+        # Xử lý theo loại yêu cầu
+        if int(type) == 1:
+            next_action(driver, area_data_url)
+        else:
+            url = "http://192.168.0.65:8180/#menu=29&action=168"
+            driver.get(url)
+            print("Thực hiện chỉ định")
+
+        print("=== Đăng nhập hoàn tất ===")
     except Exception as e:
-        print(f"Lỗi trong quá trình thực thi chính: {e}")
+        print(f"Lỗi trong quá trình thực thi: {e}")
 
     return driver
+
 
 def select_date(driver, month_value, year_value):
     try:
@@ -317,11 +301,13 @@ def set_date(driver, element_id, date_value):
 #check disabled và lấy tổng số phần tử
 def check_and_click_page(driver):
     try:
+        time.sleep(15)
+        wait_for_fe_load(driver)
         # Chờ đến khi phần tử có class 'j-bar-last' xuất hiện
         buttons = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, 'j-bar-last'))
         )
-        time.sleep(3)
+        time.sleep(5)
         
         # Tìm phần tử với thuộc tính 'disabled="disabled"' và click vào nó
         for button in buttons:
@@ -330,7 +316,7 @@ def check_and_click_page(driver):
                 print("Clicked on the disabled 'j-bar-last' button")
                 break
 
-        time.sleep(3)
+        time.sleep(5)
 
         # Lấy giá trị sau dấu '/'
         span_text = WebDriverWait(driver, 10).until(
@@ -483,6 +469,7 @@ def get_total_and_page(driver):
     Total = 0
     page = 0
     try:    
+        
         Total = check_and_click_page(driver)
         if Total is not None:
             numberpage = int(Total) / 80
@@ -500,6 +487,9 @@ def get_total_and_page(driver):
         time.sleep(10)
     except Exception as e:
         print("====lỗi hàm get total====")
+        if driver:
+            driver.quit()
+        login_again()
     return Total,page
 
 def click_search_button(driver):
@@ -632,7 +622,7 @@ def getdatacsv(driver):
     return existing_records ,data_header,csv_filenames
 #LẤY PAGE VÀ STT
 def locate_table(driver):
-    listbody_div = WebDriverWait(driver, 10).until(
+    listbody_div = WebDriverWait(driver, 0.1).until(
         EC.presence_of_element_located((By.ID, 'lstMain-body'))
     )
     table = listbody_div.find_element(By.TAG_NAME, 'table')
@@ -681,28 +671,92 @@ def get_series_data(number, numberId,driver):
         })
 
     return series_data
+def wait_for_fe_load(driver, timeout=30):
+    script = """
+    return new Promise((resolve) => {
+        if (typeof window.FELoad === 'function') {
+            let originalFELoad = window.FELoad;
+            window.FELoad = function() {
+                originalFELoad.apply(this, arguments);
+                resolve(true);
+            };
+        } else {
+            // Nếu FELoad không tồn tại, giả định rằng nó đã được gọi
+            resolve(true);
+        }
+        
+        // Timeout sau một khoảng thời gian nếu FELoad không được gọi
+        setTimeout(() => resolve(false), arguments[0]);
+    });
+    """
+    
+    try:
+        is_loaded = WebDriverWait(driver, timeout).until(
+            lambda d: d.execute_script(script, timeout * 1000)
+        )
+        if is_loaded:
+            print("FELoad đã được thực thi!")
+            return True
+        else:
+            print("Timeout khi đợi FELoad thực thi")
+            return False
+    except TimeoutException:
+        print("Timeout khi đợi FELoad thực thi")
+        return False
+def getDownload(driver, numberIdPatient):
+    try:
+        # Đợi và nhấn nút Download
+        div_check_button_download = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, 'btnDownload'))
+        )
+        div_check_button_download.click()
 
-def getDownload(driver):
-    div_check_button_download = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.ID, 'btnDownload'))
-    )
-    div_check_button_download.click()
-    #    # Chờ cho pop-up div xuất hiện (timeout sau 10 giây)
-    # popup = WebDriverWait(driver, 10).until(
-    #     EC.presence_of_element_located((By.ID, "cpwbzk"))
-    # )
-    
-    print("Pop-up div đã xuất hiện!")
+        print(f"benh nhan:{numberIdPatient}")
 
-    # Chờ cho nút "btnSave" có thể nhấn được (timeout sau 10 giây)
-    button = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.ID, "btnSave"))
-    )
-    
-    # Nhấn nút
-    button.click()
-    
-    print("Đã nhấn nút 'Lưu' thành công!")
+        # Đợi cho loading mask biến mất
+        WebDriverWait(driver, 30).until(
+            EC.invisibility_of_element_located((By.ID, "mask"))
+        )
+
+        # Đợi và nhấn nút Save
+        button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "btnSave"))
+        )
+        
+        # Sử dụng JavaScript để nhấn nút thay vì click trực tiếp
+        driver.execute_script("arguments[0].click();", button)
+
+        # Đợi cho đến khi nút Save biến mất
+        WebDriverWait(driver, 30).until_not(
+            EC.presence_of_element_located((By.ID, "btnSave"))
+        )
+
+        # urldown = "C:\\Users\\ndung\\Downloads"
+        # getfiledownloadnow = os.path.join(urldown)
+        # print(f"Đường dẫn thư mục tải xuống: {getfiledownloadnow}")
+
+        # # Đợi cho file tải xuống hoàn tất
+        # wait_for_download_complete(urldown)
+
+    except Exception as e:
+        print(f"Lỗi trong quá trình thực thi: {str(e)}")
+        # Có thể thêm logic retry ở đây nếu cần
+
+def wait_for_download_complete(download_path, timeout=300):
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        time.sleep(1)
+        files = os.listdir(download_path)
+        if any(file.endswith('.crdownload') for file in files):
+            print("Đang tải xuống...")
+        else:
+            print("Tải xuống hoàn tất!")
+            return True
+    print("Hết thời gian chờ tải xuống")
+    return False
+   
+   
+
 
 def getData_Image(cols, number, numberId,driver):
         # Get the first column data (assuming it's the ID or unique identifier)
@@ -741,7 +795,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
     #
     existing_records,data_header,csv_filenames = getdatacsv(driver)
     print("=======lay du lieu ca chup========")
-    time.sleep(1)
+    time.sleep(0.5)
 
     
 
@@ -796,7 +850,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
             print(f"===đối tượng đầu tiên {number}===")
             number += 1
             numberIDBenhNhan = ""
-            if number_now == 5:
+            if number_now == 81:
                 return data_array, process_edit_data, number_now
             for col in cols[1:]:
                 retry_count = 1
@@ -805,7 +859,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                     try:
                         actions = ActionChains(driver)
                         actions.move_to_element(col).perform()
-                        text = WebDriverWait(driver, 10).until(EC.visibility_of(col)).text
+                        text = WebDriverWait(driver, 0.1).until(EC.visibility_of(col)).text
                         try:
                             icon_element = col.find_element(By.TAG_NAME, "i")
                             icon_html = icon_element.get_attribute('outerHTML')
@@ -828,7 +882,7 @@ def extract_and_save_table_data_loads_cachup(driver,Stt,numberRun,page):
                                 # Hoặc cuộn đến phần tử cụ thể
                                 element = cols[0]  # hoặc phần tử bạn muốn cuộn đến
                                 driver.execute_script("arguments[0].scrollIntoView(true);", element)
-                                time.sleep(5)
+                                time.sleep(0.2)
                                 cols[0].click()
                               
                                 # if int(valueImage) <= 2000:  # Thay đổi từ 5 thành 3
@@ -938,83 +992,121 @@ def login_again(max_retries=3):
                 print("===chạy lại hàm main đã thử 2 lần có vẻ hệ thống reset sau 300s===")
                 raise
                 # raise  # Nếu đã thử hết số lần, ném ngoại lệ
+# hàm cãi tiến
+def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page):
+    global dateSelect, urlFolder
+    existing_records, data_header, csv_filenames = getdatacsv(driver)
+    print("=======lay du lieu ca chup========")
+
+    def get_row_data(page):
+        rows = locate_table(driver)
+        number = existing_records + 1
+        processed_count = 0
+
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, 'td')
+            data_row = [number, page, ""]  # Khởi tạo với các giá trị mặc định
+
+            numberIDBenhNhan = cols[1].text  # Lấy mã bệnh nhân
+            
+            for col in cols[1:]:
+                try:
+                    text = col.text
+                    if len(data_row) == 8:  # Xử lý cột hình ảnh
+                        if text.isdigit():
+                            cols[0].click()
+                            getDownload(driver,numberIDBenhNhan)
+                            driver.execute_script("arguments[0].scrollIntoView(true);", cols[0])
+                            time.sleep(2)
+                            cols[0].click()
+                    data_row.append(text)
+                except StaleElementReferenceException:
+                    data_row.append("")
+
+            # Ghi dữ liệu ngay lập tức vào file CSV
+            with open(csv_filenames, mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.DictWriter(file, fieldnames=data_header)
+                if file.tell() == 0:
+                    writer.writeheader()
+                writer.writerow({data_header[i]: data_row[i] for i in range(len(data_header))})
+
+            number += 1
+            processed_count += 1
+            if processed_count >= 24:
+                break
+
+        return processed_count
+
+    numberrunget = get_row_data(page)
+    return numberrunget, csv_filenames
 # Main function to run the script
 def main():
     global urlFolder, dateSelect
-    try:
-        total = 0
-        totalpage = 0
-        driver = None
-        csvfilenew = ""
+    max_try = 3
+    retry_count = 0
 
-        # Đăng nhập lần đầu để lấy giá trị total
-        driver = login_again()
-        time.sleep(0.5)
-        total, totalpage = get_total_and_page(driver)
-        print(f"+=>hoàn tất ghi nhận số page là:{totalpage}")
-        print(f"+=>hoàn tất ghi nhận tổng số phần tử cần lấy là: {total}")
-        
-        driver.quit()
+    while retry_count < max_try:
+        try:
+            total = 0
+            totalpage = 0
+            driver = None
+            csvfilenew = ""
 
-        # Lấy dữ liệu từ file Excel
-        result = read_excel_last_element()
-        
-        Stt = int(result["STT"])
-        page = int(result["Page"])
-        if Stt == 0 and page == 0:
-            Stt = 0
-            page = 0
-        print(f"+=>ta có Stt:{Stt}, page:{page}")
+            # Đăng nhập lần đầu để lấy giá trị total
+            driver = login_again()
+            total, totalpage = get_total_and_page(driver)
+            print(f"+=>hoàn tất ghi nhận số page là:{totalpage}")
+            print(f"+=>hoàn tất ghi nhận tổng số phần tử cần lấy là: {total}")
+            
+            driver.quit()
 
-        numberget = Stt
-        success = False
-        items_per_page = 80  # Số lượng phần tử trên mỗi trang
-       
-        while numberget <= int(total):
-            print(f"====đang chạy: {numberget}/{total}====")
-            if Stt != 0:
-               page = min(numberget // items_per_page, totalpage - 1) 
-               Stt = 0
-            try:
-                if success == False:
-                    print("=====Đang đăng nhập lại=====")
-                    success = True
-                    print(f"===>số page hiện tại:{page}")
-                    if driver:
-                        driver.quit()
-                    driver = login_again()
-                    # Điều hướng đến trang đúng
-                    for _ in range(page):
-                        if not click_next(driver):
-                            print("Không thể tiếp tục điều hướng")
-                            break
-                    time.sleep(1)
+            # Lấy dữ liệu từ file Excel
+            result = read_excel_last_element()
+            
+            Stt = int(result["STT"])
+            page = int(result["Page"])
+            if Stt == 0 and page == 0:
+                Stt = 0
+                page = 0
+            print(f"+=>ta có Stt:{Stt}, page:{page}")
+
+            numberget = Stt
+            items_per_page = 80
+
+            while numberget < int(total):
+                print(f"====đang chạy: {numberget}/{total}====")
+                page = min(numberget // items_per_page, totalpage - 1)
                 
-                if driver:
-                    items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup(driver, Stt, numberget,page)
-                    Csv_To_Excel(csvfilenew)
-                    numbersst = items_extracted - 1
-                    numberget += numbersst
-                    Stt += numbersst
-                    page = min(numberget // items_per_page, totalpage - 1)
-                    print(f"number đếm hiện tại: {numberget}")
-                    success = False
-            except Exception as inner_e:
-                print(f"Lỗi trong vòng lặp: {inner_e}")
-                success = False  # Đặt lại success = False khi có lỗi
-                continue  # Tiếp tục vòng lặp
+                driver = login_again()
+                for _ in range(page):
+                    if not click_next(driver):
+                        print("Không thể tiếp tục điều hướng")
+                        break
+                time.sleep(1)
 
-            # Kiểm tra nếu đã đạt đến total
-            if numberget >= int(total):
+                items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberget, page)
+                Csv_To_Excel(csvfilenew)
+                
+                numberget += items_extracted
+                Stt += items_extracted
+                
+                driver.quit()
+
+            print("Hoàn thành quá trình lấy dữ liệu.")
+            break
+
+        except Exception as e:
+            retry_count += 1
+            print(f"Lỗi trong quá trình thực thi chính: {e} thử chạy lại {retry_count}/{max_try}")
+            if driver:
+                driver.quit()
+            if retry_count < max_try:
+                print(f"Đang thử lại sau 10 giây...")
+                time.sleep(10)
+            else:
+                print("Đã vượt quá số lần thử lại tối đa. Kết thúc chương trình.")
                 break
-   
-        if driver:
-            driver.quit()
 
-    except Exception as e:
-        print(f"Lỗi trong quá trình thực thi chính: {e}")
-        if driver:
-            driver.quit()
 
 
 def on_button_click():
