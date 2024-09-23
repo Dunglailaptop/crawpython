@@ -69,6 +69,7 @@ urlFileExcel = ""
 #ngày chọn 
 dateSelect = ''
 # page = 2
+urlFileCSV = ''
 
 def call_api_import_size(json_file_path, url, chunk_size=100):
     with open(json_file_path, 'r', encoding='utf-8', errors='ignore') as file:
@@ -192,9 +193,14 @@ def login(type):
         options.add_experimental_option("prefs", prefs)
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
-        options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
-        options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
-        
+        # options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
+        # options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
+        #thêm của claude hướng dẫn
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument('--ignore-ssl-errors')
+        options.add_argument('--safebrowsing-disable-download-protection')
+     
+        #========================
         driver = webdriver.Chrome(options=options)
 
         # Mở website
@@ -463,6 +469,47 @@ def read_excel_last_element():
     except Exception:
         # Trả về một từ điển với giá trị mặc định nếu có bất kỳ lỗi nào xảy ra
         return {"STT": 0, "Page": 0}
+def select_csv_file():
+    global urlFileCSV
+    # Ẩn cửa sổ chính của tkinter
+    Tk().withdraw()
+
+    # Mở hộp thoại để chọn file
+    file_path = askopenfilename(filetypes=[("CSV files", "*.csv")])
+    
+    # Kiểm tra xem có chọn file hay không
+    if not file_path:
+        print("KO TÌM THẤY FILE")
+    urlFileCSV = file_path 
+def read_csv_last_element():
+    global urlFileCSV
+    try:
+        # Đọc file CSV
+        df = pd.read_csv(urlFileCSV)
+        
+        # Kiểm tra xem có ít nhất hai cột không
+        if len(df.columns) < 2:
+            return {"STT": 0, "Page": 0}
+        
+        # Lấy hai cột đầu tiên
+        stt = df.iloc[:, 0]
+        page = df.iloc[:, 1]
+        
+        # Kiểm tra xem có dữ liệu không
+        if len(stt) == 0 and len(page) == 0:
+            return {"STT": 0, "Page": 0}
+        
+        # Lấy phần tử cuối cùng
+        last_element = {
+            "STT": stt.iloc[-1],
+            "Page": page.iloc[-1]
+        }
+        
+        return last_element
+    except Exception:
+        # Trả về một từ điển với giá trị mặc định nếu có bất kỳ lỗi nào xảy ra
+        return {"STT": 0, "Page": 0}
+
 #hàm lấy total và tổng số page
 def get_total_and_page(driver):
     print("===bắt đầu lấy tổng số phần tử và page===")
@@ -605,7 +652,7 @@ def getdatacsv(driver):
     data_header.insert(2,"KETQUACHIDINHKHAM")
     date = datetime.strptime(dateSelect,"%d/%m/%Y")
     formatted_date = date.strftime("%d-%m-%Y")
-    csv_filenames = os.path.join(urlFolder, f"Cachup_data_{formatted_date}.csv")
+    csv_filenames = os.path.join(urlFolder, f"Cachup_ngay {formatted_date}.csv")
     # Đọc số lượng bản ghi hiện có trong file CSV
     existing_records = 0
     if os.path.exists(csv_filenames):
@@ -722,9 +769,9 @@ def getDownload(driver, numberIdPatient):
         button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "btnSave"))
         )
-        
+        button.click()
         # Sử dụng JavaScript để nhấn nút thay vì click trực tiếp
-        driver.execute_script("arguments[0].click();", button)
+        # driver.execute_script("arguments[0].click();", button)
 
         # Đợi cho đến khi nút Save biến mất
         WebDriverWait(driver, 30).until_not(
@@ -1001,9 +1048,10 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
     def get_row_data(page):
         rows = locate_table(driver)
         number = existing_records + 1
+        startindex = existing_records % 80
         processed_count = 0
 
-        for row in rows:
+        for row in rows[startindex:]:
             cols = row.find_elements(By.TAG_NAME, 'td')
             data_row = [number, page, ""]  # Khởi tạo với các giá trị mặc định
 
@@ -1017,7 +1065,7 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
                             cols[0].click()
                             getDownload(driver,numberIDBenhNhan)
                             driver.execute_script("arguments[0].scrollIntoView(true);", cols[0])
-                            time.sleep(2)
+                            time.sleep(0.5)
                             cols[0].click()
                     data_row.append(text)
                 except StaleElementReferenceException:
@@ -1029,10 +1077,10 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
                 if file.tell() == 0:
                     writer.writeheader()
                 writer.writerow({data_header[i]: data_row[i] for i in range(len(data_header))})
-
+            Csv_To_Excel(csv_filenames)
             number += 1
             processed_count += 1
-            if processed_count >= 24:
+            if processed_count >= 9:
                 break
 
         return processed_count
@@ -1042,7 +1090,7 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
 # Main function to run the script
 def main():
     global urlFolder, dateSelect
-    max_try = 3
+    max_try = 5
     retry_count = 0
 
     while retry_count < max_try:
@@ -1085,13 +1133,13 @@ def main():
                 time.sleep(1)
 
                 items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberget, page)
-                Csv_To_Excel(csvfilenew)
+                # Csv_To_Excel(csvfilenew)
                 
                 numberget += items_extracted
                 Stt += items_extracted
                 
                 driver.quit()
-
+            print("===Kết thúc thu thập dữ liệu===")
             print("Hoàn thành quá trình lấy dữ liệu.")
             break
 
@@ -1292,7 +1340,7 @@ def Csv_To_Excel(csv_filename):
 
         # Xóa file CSV gốc
         # os.remove(csv_filename)
-        print("===Kết thúc thu thập dữ liệu===")
+        
         return True
 
     except Exception as e:
