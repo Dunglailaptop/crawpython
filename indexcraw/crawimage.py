@@ -156,8 +156,8 @@ def next_action(driver,area_data_url):
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom","01/01/2023")
-    set_date2(driver, "dbTo", "01/01/2023")
+    set_date2(driver, "dbFrom","02/01/2023")
+    set_date2(driver, "dbTo", "31/01/2023")
     time.sleep(5)
 
         # Tìm phần tử có class "btns"
@@ -193,8 +193,8 @@ def login(type):
         options.add_experimental_option("prefs", prefs)
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
-        # options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
-        # options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
+        options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
+        options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
         #thêm của claude hướng dẫn
         options.add_argument('--ignore-certificate-errors')
         options.add_argument('--ignore-ssl-errors')
@@ -758,7 +758,7 @@ def getDownload(driver, numberIdPatient):
         )
         div_check_button_download.click()
 
-        print(f"benh nhan:{numberIdPatient}")
+        # print(f"benh nhan:{numberIdPatient}")
 
         # Đợi cho loading mask biến mất
         WebDriverWait(driver, 30).until(
@@ -1056,10 +1056,15 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
             data_row = [number, page, ""]  # Khởi tạo với các giá trị mặc định
 
             numberIDBenhNhan = cols[1].text  # Lấy mã bệnh nhân
-            
+            tenbenhnhan = cols[2].text
+            print(f"====bệnh nhân số {number} với mã: {numberIDBenhNhan}====")
+            print(f"==>tên bệnh nhân:{tenbenhnhan}")
+            print("===========================")
             for col in cols[1:]:
                 try:
-                    text = col.text
+                    actions = ActionChains(driver)
+                    actions.move_to_element(col).perform()
+                    text = WebDriverWait(driver, 0.1).until(EC.visibility_of(col)).text 
                     if len(data_row) == 8:  # Xử lý cột hình ảnh
                         if text.isdigit():
                             cols[0].click()
@@ -1080,7 +1085,7 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
             Csv_To_Excel(csv_filenames)
             number += 1
             processed_count += 1
-            if processed_count >= 9:
+            if processed_count >= 20:
                 break
 
         return processed_count
