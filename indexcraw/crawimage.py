@@ -156,8 +156,8 @@ def next_action(driver,area_data_url):
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom","02/01/2023")
-    set_date2(driver, "dbTo", "31/01/2023")
+    set_date2(driver, "dbFrom","01/02/2023")
+    set_date2(driver, "dbTo", "31/02/2023")
     time.sleep(5)
 
         # Tìm phần tử có class "btns"
