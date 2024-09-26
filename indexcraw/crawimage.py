@@ -156,7 +156,7 @@ def next_action(driver,area_data_url):
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom","02/01/2023")
+    set_date2(driver, "dbFrom","01/01/2023")
     set_date2(driver, "dbTo", "31/01/2023")
     time.sleep(5)
 
@@ -188,6 +188,15 @@ def login(type):
 
         # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
+        
+        options.add_experimental_option("prefs", {
+            "download.default_directory": urlFolder,
+            "profile.default_content_setting_values.automatic_downloads": 1,
+            "download.prompt_for_download": False,
+            "profile.default_content_settings.popups": 0,
+            "safebrowsing.enabled": "false",
+            "safebrowsing.disable_download_protection": True
+         })
         prefs = {"credentials_enable_service": False,
                  "profile.password_manager_enabled": False}
         options.add_experimental_option("prefs", prefs)
@@ -1316,33 +1325,35 @@ def Csv_To_Excel(csv_filename):
     global urlFileExcel
     try:
         output_filename = os.path.basename(urlFileExcel)
-        
-        # Tạo workbook mới và chọn sheet active
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Sheet1"
-
-        # Đọc file CSV và ghi từng dòng vào Excel
-        with open(csv_filename, 'r', encoding='utf-8-sig') as csvfile:
-            csv_reader = csv.reader(csvfile)
-            headers = next(csv_reader)  # Đọc header
-            
-            # Ghi headers
-            for col, header in enumerate(headers, start=1):
-                ws.cell(row=1, column=col, value=header)
-            
-            # Ghi dữ liệu
-            for row_idx, row in enumerate(csv_reader, start=2):
-                for col, value in enumerate(row, start=1):
-                    ws.cell(row=row_idx, column=col, value=value)
+        if output_filename:
                 
-                # Lưu workbook sau mỗi 1000 dòng để giảm sử dụng bộ nhớ
-                if row_idx % 1000 == 0:
-                    wb.save(output_filename)
+            # Tạo workbook mới và chọn sheet active
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Sheet1"
 
-        # Lưu lần cuối
-        wb.save(output_filename)
+            # Đọc file CSV và ghi từng dòng vào Excel
+            with open(csv_filename, 'r', encoding='utf-8-sig') as csvfile:
+                csv_reader = csv.reader(csvfile)
+                headers = next(csv_reader)  # Đọc header
+                
+                # Ghi headers
+                for col, header in enumerate(headers, start=1):
+                    ws.cell(row=1, column=col, value=header)
+                
+                # Ghi dữ liệu
+                for row_idx, row in enumerate(csv_reader, start=2):
+                    for col, value in enumerate(row, start=1):
+                        ws.cell(row=row_idx, column=col, value=value)
+                    
+                    # Lưu workbook sau mỗi 1000 dòng để giảm sử dụng bộ nhớ
+                    if row_idx % 1000 == 0:
+                        wb.save(output_filename)
 
+            # Lưu lần cuối
+            wb.save(output_filename)
+        else:
+            print("ko ton tai")
         # Xóa file CSV gốc
         # os.remove(csv_filename)
         
