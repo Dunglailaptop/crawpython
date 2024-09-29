@@ -654,14 +654,14 @@ def capture_image(driver, download_path, file_name, numberId):
 #lấy dữ liệu 
 #lấy dữ liệu file csv
 def getdatacsv(driver):
-    global dateSelect,urlFolder
+    global dateSelect,urlFileCSV
     data_header = extract_header_data(driver)
     data_header.insert(0,"STT")
     data_header.insert(1,"PAGE")
     data_header.insert(2,"KETQUACHIDINHKHAM")
-    date = datetime.strptime(dateSelect,"%d/%m/%Y")
-    formatted_date = date.strftime("%d-%m-%Y")
-    csv_filenames = os.path.join(urlFolder, f"Cachup_ngay {formatted_date}.csv")
+    # date = datetime.strptime(dateSelect,"%d/%m/%Y")
+    # formatted_date = date.strftime("%d-%m-%Y")
+    csv_filenames = os.path.join(urlFileCSV)
     # Đọc số lượng bản ghi hiện có trong file CSV
     existing_records = 0
     if os.path.exists(csv_filenames):
@@ -1091,7 +1091,7 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
                 if file.tell() == 0:
                     writer.writeheader()
                 writer.writerow({data_header[i]: data_row[i] for i in range(len(data_header))})
-            Csv_To_Excel(csv_filenames)
+            #Csv_To_Excel(csv_filenames)
             number += 1
             processed_count += 1
             if processed_count >= 20:
@@ -1109,6 +1109,7 @@ def main():
 
     while retry_count < max_try:
         try:
+           
             total = 0
             totalpage = 0
             driver = None
@@ -1123,10 +1124,11 @@ def main():
             driver.quit()
 
             # Lấy dữ liệu từ file Excel
-            result = read_excel_last_element()
-            
-            Stt = int(result["STT"])
-            page = int(result["Page"])
+            # result = read_excel_last_element()
+            readCSVFILE = read_csv_last_element()
+            print(f"{readCSVFILE["STT"]} va {readCSVFILE["Page"]}")
+            Stt = int(readCSVFILE["STT"])
+            page = int(readCSVFILE["Page"])
             if Stt == 0 and page == 0:
                 Stt = 0
                 page = 0
@@ -1324,39 +1326,47 @@ def Csv_To_Excel_Overite(csv_filename):
 def Csv_To_Excel(csv_filename):
     global urlFileExcel
     try:
-        output_filename = os.path.basename(urlFileExcel)
-        if output_filename:
-                
-            # Tạo workbook mới và chọn sheet active
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Sheet1"
+        if not os.path.exists(urlFileExcel):
+            print(f"File Excel không tồn tại: {urlFileExcel}")
+            return False
 
-            # Đọc file CSV và ghi từng dòng vào Excel
-            with open(csv_filename, 'r', encoding='utf-8-sig') as csvfile:
-                csv_reader = csv.reader(csvfile)
-                headers = next(csv_reader)  # Đọc header
-                
-                # Ghi headers
-                for col, header in enumerate(headers, start=1):
-                    ws.cell(row=1, column=col, value=header)
-                
-                # Ghi dữ liệu
-                for row_idx, row in enumerate(csv_reader, start=2):
-                    for col, value in enumerate(row, start=1):
-                        ws.cell(row=row_idx, column=col, value=value)
-                    
-                    # Lưu workbook sau mỗi 1000 dòng để giảm sử dụng bộ nhớ
-                    if row_idx % 1000 == 0:
-                        wb.save(output_filename)
-
-            # Lưu lần cuối
-            wb.save(output_filename)
-        else:
-            print("ko ton tai")
-        # Xóa file CSV gốc
-        # os.remove(csv_filename)
+        # Mở workbook hiện có
+        wb = load_workbook(urlFileExcel)
         
+        # Chọn sheet đầu tiên hoặc tạo mới nếu không có
+        if len(wb.sheetnames) > 0:
+            ws = wb.active
+        else:
+            ws = wb.create_sheet(title="Sheet1")
+
+        # Đọc file CSV và ghi từng dòng vào Excel
+        with open(csv_filename, 'r', encoding='utf-8-sig') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            headers = next(csv_reader)  # Đọc header
+            
+            # Tìm dòng trống đầu tiên trong sheet
+            first_empty_row = 1
+            while ws.cell(row=first_empty_row, column=1).value is not None:
+                first_empty_row += 1
+            
+            # Ghi headers nếu sheet trống
+            if first_empty_row == 1:
+                for col, header in enumerate(headers, start=1):
+                    ws.cell(row=first_empty_row, column=col, value=header)
+                first_empty_row += 1
+            
+            # Ghi dữ liệu
+            for row_idx, row in enumerate(csv_reader, start=first_empty_row):
+                for col, value in enumerate(row, start=1):
+                    ws.cell(row=row_idx, column=col, value=value)
+                
+                # Lưu workbook sau mỗi 1000 dòng để giảm sử dụng bộ nhớ
+                if row_idx % 1000 == 0:
+                    wb.save(urlFileExcel)
+
+        # Lưu lần cuối
+        wb.save(urlFileExcel)
+        print(f"Dữ liệu đã được thêm vào file Excel: {urlFileExcel}")
         return True
 
     except Exception as e:
@@ -1535,7 +1545,7 @@ label.pack(pady=10)
 
 
 #get data json
-file_button = ttk.Button(root, text="Select csv Excel", command=select_Excel_File, width=30)  # Corrected here
+file_button = ttk.Button(root, text="Select csv Excel", command=select_csv_file, width=30)  # Corrected here
 file_button.pack(pady=10)
 
 
