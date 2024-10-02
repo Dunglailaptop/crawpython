@@ -46,6 +46,7 @@ from tkinter.filedialog import askopenfilename
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
+import threading
 import pandas as pd
 import openpyxl
 import pandas as pd
@@ -68,6 +69,9 @@ urlFolder = ""
 urlFileExcel = ""
 #ngày chọn 
 dateSelect = ''
+
+dateSelect1 = ''
+dateSelect2 = ''
 # page = 2
 urlFileCSV = ''
 
@@ -153,11 +157,12 @@ def process_text(text):
     return text_without_spaces
 
 def next_action(driver,area_data_url):
+    global dateSelect1,dateSelect2
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom","01/01/2023")
-    set_date2(driver, "dbTo", "31/01/2023")
+    set_date2(driver, "dbFrom",dateSelect1)
+    set_date2(driver, "dbTo", dateSelect2)
     time.sleep(5)
 
         # Tìm phần tử có class "btns"
@@ -1508,7 +1513,34 @@ def get_patient_data(patient_id, driver):
     return data_Array
 
 
+def threading():
+    global dateSelect1, dateSelect2
+    def my_function1(name, delay):
+        print(f"Luồng {name} bắt đầu")
+        time.sleep(delay)
+        dateSelect1 = '01/02/2023'
+        dateSelect2 = '31/02/2023'
+        main()
+        print(f"Luồng {name} kết thúc sau {delay} giây")
+    def my_function2(name, delay):
+        print(f"Luồng {name} bắt đầu")
+        time.sleep(delay)
+        main()
+        print(f"Luồng {name} kết thúc sau {delay} giây")
 
+    # Tạo hai luồng
+    thread1 = threading.Thread(target=my_function, args=("1", 2))
+    thread2 = threading.Thread(target=my_function, args=("2", 4))
+
+    # Bắt đầu chạy các luồng
+    thread1.start()
+    thread2.start()
+
+    # Đợi cho đến khi cả hai luồng kết thúc
+    thread1.join()
+    thread2.join()
+
+    print("Tất cả các luồng đã hoàn thành")
    
    
   
