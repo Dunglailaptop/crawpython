@@ -207,8 +207,8 @@ def login(type):
         options.add_experimental_option("prefs", prefs)
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
-        # options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
-        # options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
+        options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
+        options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
         #thêm của claude hướng dẫn
         options.add_argument('--ignore-certificate-errors')
         options.add_argument('--ignore-ssl-errors')
