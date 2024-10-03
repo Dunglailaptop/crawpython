@@ -161,8 +161,8 @@ def next_action(driver,area_data_url):
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom",dateSelect1)
-    set_date2(driver, "dbTo", dateSelect2)
+    set_date2(driver, "dbFrom","01/01/2023")
+    set_date2(driver, "dbTo", "31/01/2023")
     time.sleep(5)
 
         # Tìm phần tử có class "btns"
@@ -207,8 +207,8 @@ def login(type):
         options.add_experimental_option("prefs", prefs)
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
-        options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
-        options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
+        # options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
+        # options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
         #thêm của claude hướng dẫn
         options.add_argument('--ignore-certificate-errors')
         options.add_argument('--ignore-ssl-errors')
