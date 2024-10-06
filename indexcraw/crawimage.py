@@ -207,22 +207,26 @@ def login(type):
         #  })
         prefs = {"credentials_enable_service": False,
                  "profile.password_manager_enabled": False}
-        options.add_experimental_option("prefs", prefs)
+        # options.add_experimental_option("prefs", prefs)
+        # options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
+        # options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
+        # options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
+        # options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
+        # #thêm của claude hướng dẫn
+        # options.add_argument('--ignore-certificate-errors')
+        # options.add_argument('--ignore-ssl-errors')
+        # options.add_argument('--safebrowsing-disable-download-protection')
+        
+        options.add_argument("--headless")  # Chạy trình duyệt trong chế độ headless
+        options.add_argument("--window-size=1920x1080")  # Thiết lập kích thước cửa sổ mặc định
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
-        options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
-        options.add_argument("--window-size=1920x1080")  # Kích thước cửa sổ mặc định
-        #thêm của claude hướng dẫn
         options.add_argument('--ignore-certificate-errors')
         options.add_argument('--ignore-ssl-errors')
         options.add_argument('--safebrowsing-disable-download-protection')
-     
         #========================
         driver = webdriver.Chrome(options=options)
-
-        # Mở website
         driver.get(login_url)
-        driver.maximize_window()
         # Sử dụng WebDriverWait để đảm bảo phần tử đã sẵn sàng
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "txtUsername")))
         
@@ -1125,13 +1129,12 @@ def main():
             csvfilenew = ""
 
             # Đăng nhập lần đầu để lấy giá trị total
-            driver = login_again()
-            total, totalpage = get_total_and_page(driver)
-            print(f"+=>hoàn tất ghi nhận số page là:{totalpage}")
-            print(f"+=>hoàn tất ghi nhận tổng số phần tử cần lấy là: {total}")
-            
-            driver.quit()
-
+            if total == 0:
+                driver = login_again()
+                total, totalpage = get_total_and_page(driver)
+                print(f"+=>hoàn tất ghi nhận số page là:{totalpage}")
+                print(f"+=>hoàn tất ghi nhận tổng số phần tử cần lấy là: {total}")
+                driver.quit()
             # Lấy dữ liệu từ file Excel
             # result = read_excel_last_element()
             readCSVFILE = read_csv_last_element()
