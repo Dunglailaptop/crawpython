@@ -46,6 +46,8 @@ from tkinter.filedialog import askopenfilename
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
+from datetime import datetime, timedelta
+import tkinter as tk
 import threading
 import pandas as pd
 import openpyxl
@@ -61,6 +63,7 @@ import io
 import os
 from PIL import Image
 import numpy as np
+
 
 
 #urlfolder lưu đường dẫn folder khi ghi nhận xong
@@ -161,8 +164,8 @@ def next_action(driver,area_data_url):
 # chọn phân trang tính toán tổng số page
     driver.get(area_data_url)
     time.sleep(2)
-    set_date2(driver, "dbFrom","01/01/2023")
-    set_date2(driver, "dbTo", "31/01/2023")
+    set_date2(driver, "dbFrom",dateSelect1)
+    set_date2(driver, "dbTo", dateSelect2)
     time.sleep(5)
 
         # Tìm phần tử có class "btns"
@@ -188,20 +191,20 @@ def login(type):
         password = "74777477"
         area_data_url = "http://192.168.0.65:8180/#menu=131&action=111"  
             
-        download_dir = os.path.join(urlFolder)
-        os.makedirs(download_dir, exist_ok=True)
+        # download_dir = os.path.join(urlFolder)
+        # os.makedirs(download_dir, exist_ok=True)
 
         # Initialize ChromeDriver
         options = webdriver.ChromeOptions()
         
-        options.add_experimental_option("prefs", {
-            "download.default_directory": urlFolder,
-            "profile.default_content_setting_values.automatic_downloads": 1,
-            "download.prompt_for_download": False,
-            "profile.default_content_settings.popups": 0,
-            "safebrowsing.enabled": "false",
-            "safebrowsing.disable_download_protection": True
-         })
+        # options.add_experimental_option("prefs", {
+        #     "download.default_directory": urlFolder,
+        #     "profile.default_content_setting_values.automatic_downloads": 1,
+        #     "download.prompt_for_download": False,
+        #     "profile.default_content_settings.popups": 0,
+        #     "safebrowsing.enabled": "false",
+        #     "safebrowsing.disable_download_protection": True
+        #  })
         prefs = {"credentials_enable_service": False,
                  "profile.password_manager_enabled": False}
         options.add_experimental_option("prefs", prefs)
@@ -495,6 +498,7 @@ def select_csv_file():
     if not file_path:
         print("KO TÌM THẤY FILE")
     urlFileCSV = file_path 
+    get_selected_date()
 def read_csv_last_element():
     global urlFileCSV
     try:
@@ -1109,7 +1113,7 @@ def extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberRun, page
 # Main function to run the script
 def main():
     global urlFolder, dateSelect
-    max_try = 5
+    max_try = 20
     retry_count = 0
 
     while retry_count < max_try:
@@ -1542,14 +1546,32 @@ def threading():
 
     print("Tất cả các luồng đã hoàn thành")
    
+
+
+ 
+
+
    
+
+# Hàm lấy giá trị khi nhấn nút
+def get_selected_date():
+    global dateSelect1,dateSelect2
+    # Lấy giá trị từ date_entry
+    selected_date1 = date_entry1.get()
+    selected_date2 = date_entry2.get()
+    # Chuyển đổi định dạng ngày
+    selected_datetime1 = datetime.strptime(selected_date1, "%m/%d/%y")  # Bạn có thể điều chỉnh định dạng nếu cần
+    selected_datetime2 = datetime.strptime(selected_date2, "%m/%d/%y")
+    print("Ngày đã chọn bắt đầu từ:", selected_datetime1.strftime("%d/%m/%Y"),"và kết thúc:",selected_datetime2.strftime("%d/%m/%Y"))  # In ra ngày theo định dạng dd/mm/yyyy
+    dateSelect1 = selected_datetime1.strftime("%d/%m/%Y")
+    dateSelect2 = selected_datetime2.strftime("%d/%m/%Y")
+    main()
   
 
-root = Tk()
+# Khởi tạo ứng dụng Tkinter
+root = tk.Tk()
 root.title("Tkinter ComboBox Example")
 
-#so 
-numberget = [0]
 # Đặt kích thước cho cửa sổ
 window_width = 400
 window_height = 300
@@ -1565,36 +1587,31 @@ position_y = (screen_height // 2) - (window_height // 2)
 # Đặt kích thước và vị trí cho cửa sổ
 root.geometry(f'{window_width}x{window_height}+{position_x}+{position_y}')
 
-
-date1 = ''
-date2 = ''
-    # Create a label to display instructions
+# Tạo các label
 label = ttk.Label(root, text="SIÊU PHẦN MỀM CRAW ĐÁ DỮ LIỆU ẢNH")
 label.pack(pady=10)
-# Create a label to display instructions
+
 label = ttk.Label(root, text="Choose an option:")
 label.pack(pady=10)
 
 
-#get data json
+
+global date_entry1  # Để sử dụng date_entry bên ngoài hàm này
+date_entry1 = DateEntry(root, width=12, background='darkblue',
+                        foreground='white', borderwidth=2)
+date_entry1.pack(padx=10, pady=10)
+global date_entry2  # Để sử dụng date_entry bên ngoài hàm này
+date_entry2 = DateEntry(root, width=12, background='darkblue',
+                        foreground='white', borderwidth=2)
+date_entry2.pack(padx=10, pady=10)
+
+
+
 file_button = ttk.Button(root, text="Select csv Excel", command=select_csv_file, width=30)  # Corrected here
 file_button.pack(pady=10)
 
-
-
-button = ttk.Button(root, text="Get Data", command=select_folder, width=10)
-button.pack(pady=10)
-
-button = ttk.Button(root, text="Get data final many image", command=get_data_image_final, width=10)
-button.pack(pady=10)
-
-# button = ttk.Button(root, text="lấy chỉ định khám ",command=doc_chidinh_CLS,width=10)
-# button.pack(pady=10)
-# Start the Tkinter event loop
+# Chạy ứng dụng
 root.mainloop()
 
 
 
-# # Run the main function
-# if __name__ == "__main__":
-#     khoitaoapp()
