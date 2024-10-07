@@ -195,8 +195,7 @@ def login(type):
         # os.makedirs(download_dir, exist_ok=True)
 
         # Initialize ChromeDriver
-        options = webdriver.ChromeOptions()
-        
+        options = webdriver.ChromeOptions()        
         # options.add_experimental_option("prefs", {
         #     "download.default_directory": urlFolder,
         #     "profile.default_content_setting_values.automatic_downloads": 1,
@@ -207,7 +206,7 @@ def login(type):
         #  })
         prefs = {"credentials_enable_service": False,
                  "profile.password_manager_enabled": False}
-        # options.add_experimental_option("prefs", prefs)
+        options.add_experimental_option("prefs", prefs)
         # options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={login_url}")
         # options.add_argument(f"--unsafely-treat-insecure-origin-as-secure={area_data_url}")
         # options.add_argument("--headless=new")  # Chạy trình duyệt ở chế độ ẩn
