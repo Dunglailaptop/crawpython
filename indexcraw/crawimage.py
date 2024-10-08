@@ -1123,17 +1123,19 @@ def main():
         try:
            
             total = 0
+            checkgettoal = False
             totalpage = 0
             driver = None
             csvfilenew = ""
 
             # Đăng nhập lần đầu để lấy giá trị total
-            if total == 0:
+            if checkgettoal == False:
                 driver = login_again()
                 total, totalpage = get_total_and_page(driver)
                 print(f"+=>hoàn tất ghi nhận số page là:{totalpage}")
                 print(f"+=>hoàn tất ghi nhận tổng số phần tử cần lấy là: {total}")
                 driver.quit()
+                checkgettoal = True
             # Lấy dữ liệu từ file Excel
             # result = read_excel_last_element()
             readCSVFILE = read_csv_last_element()
@@ -1147,29 +1149,28 @@ def main():
 
             numberget = Stt
             items_per_page = 80
+            if total != 0:
+                while numberget < int(total):
+                    print(f"====đang chạy: {numberget}/{total}====")
+                    page = min(numberget // items_per_page, totalpage - 1)
+                    
+                    driver = login_again()
+                    for _ in range(page):
+                        if not click_next(driver):
+                            print("Không thể tiếp tục điều hướng")
+                            break
+                    time.sleep(1)
 
-            while numberget < int(total):
-                print(f"====đang chạy: {numberget}/{total}====")
-                page = min(numberget // items_per_page, totalpage - 1)
-                
-                driver = login_again()
-                for _ in range(page):
-                    if not click_next(driver):
-                        print("Không thể tiếp tục điều hướng")
-                        break
-                time.sleep(1)
-
-                items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberget, page)
-                # Csv_To_Excel(csvfilenew)
-                
-                numberget += items_extracted
-                Stt += items_extracted
-                
-                driver.quit()
-            print("===Kết thúc thu thập dữ liệu===")
-            print("Hoàn thành quá trình lấy dữ liệu.")
-            break
-
+                    items_extracted, csvfilenew = extract_and_save_table_data_loads_cachup_permon(driver, Stt, numberget, page)
+                    # Csv_To_Excel(csvfilenew)
+                    
+                    numberget += items_extracted
+                    Stt += items_extracted
+                    
+                    driver.quit()
+                print("===Kết thúc thu thập dữ liệu===")
+                print("Hoàn thành quá trình lấy dữ liệu.")
+                break
         except Exception as e:
             retry_count += 1
             print(f"Lỗi trong quá trình thực thi chính: {e} thử chạy lại {retry_count}/{max_try}")
