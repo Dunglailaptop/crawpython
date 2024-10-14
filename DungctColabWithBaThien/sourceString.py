@@ -11,10 +11,17 @@ ConnectStr = {
         "user": "sa",
         "password": "It@7477"
     }
+DataGet = {
+        "host": "localhost",
+        "port": "5432",
+        "database": "nhidong2_crawl_prescription",
+        "user": "postgres",
+        "password": "1234"
+    }
 secretKey = ""
 driverGlobal = any
 contentType = "application/json; charset=utf-8"
-urlGetPrescriptiondetail = "http://192.168.0.80/api/doctor_pkg/load_pkg_last_detail_presc"
+urlGetPrescriptiondetail = "http://192.168.0.77/api/doctor_pkg/load_pkg_last_detail_presc"
 Any = object()
 
 def _login_(usernameStr, passwordStr):

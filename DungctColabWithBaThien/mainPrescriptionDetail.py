@@ -52,7 +52,7 @@ def run_script():
     loading_thread.start()
     # Biến global để kiểm soát animation
     try:
-        get_list_data_prescription()
+        get_list_data_prescription(headers)
     finally:
         loading = False
         loading_thread.join()
@@ -74,6 +74,292 @@ def update_file_json(l4_value, l6_value):
     config['page_value'] = l4_value
     config['record_value'] = l6_value
     save_config(config)
+   
+def replace_nulls_with_string(data):
+    if isinstance(data, dict):
+        # Xử lý dictionary
+        for key, value in data.items():
+            if value is None:
+                data[key] = "None"
+    elif isinstance(data, list):
+        # Xử lý list chứa dictionary hoặc tuple
+        for i in range(len(data)):
+            if isinstance(data[i], dict):
+                # Nếu phần tử là dictionary, xử lý như dictionary
+                data[i] = replace_nulls_with_string(data[i])
+            elif isinstance(data[i], tuple):
+                # Nếu phần tử là tuple, xử lý từng giá trị trong tuple
+                data[i] = tuple("None" if v is None else v for v in data[i])
+    elif isinstance(data, tuple):
+        # Xử lý trực tiếp tuple
+        return tuple("None" if v is None else v for v in data)
+    return data
+
+    
+def add_detail_prescription(datalist):
+    conn_params = sour.DataGet
+    conn = psycopg2.connect(**conn_params)
+    cur = conn.cursor()
+
+    if len(datalist) > 0:
+        for d in datalist:
+            try:
+            
+
+                # Prepare drug_material_of_prescription data
+                drug_material_data = (
+                    d["drug_material_id"],
+                    d["ma_hoat_chat_ax"],
+                    d["hoat_chat_ax"],
+                    d["ma_duong_dung_ax"],
+                    d["duong_dung_ax"],
+                    d["bhyt_so_dk_gpnk"],
+                    d["bhyt_ham_luong"],
+                    d["code"],
+                    d["code_insurance"],
+                    d["enum_insurance_type"],
+                    d["proprietary_name"],
+                    d["insurance_name"],
+                    d["ten_thuongmai"],
+                    d["drug_original_name_id"],
+                    d["original_names"],
+                    d["default_usage_id"],
+                    d["enum_usage"],
+                    d["enum_unit_import_sell"],
+                    d["unit_usage_id"],
+                    d["allow_auto_cal"],
+                    d["num_of_day"],
+                    d["max_usage"],
+                    d["num_of_time"],
+                    d["unit_volume_id"],
+                    d["volume_value"],
+                    d["disable"],
+                    d["enum_item_type"],
+                    d["made_in"],
+                    d["country_name"],
+                    d["include_children"],
+                    d["insurance_support"],
+                    d["cancer_drug"],
+                    d["price"],
+                    d["ham_luong"],
+                    d["dong_goi"],
+                    d["tac_dung"],
+                    d["chi_dinh"],
+                    d["chong_chi_dinh"],
+                    d["tac_dung_phu"],
+                    d["lieu_luong"],
+                    d["poison_type_id"],
+                    d["pharmacology_id"],
+                    d["manufacturer_id"],
+                    d["ten_hang_sx"],
+                    d["renumeration_price"],
+                    d["so_dk_gpnk"],
+                    d["price_bv"],
+                    d["price_qd"],
+                    d["latest_import_price_vat"],
+                    d["latest_import_price"],
+                    d["is_bhyt_in_surgery"],
+                    d["stt_tt"],
+                    d["bv_ap_thau"],
+                    d["stt_dmt"],
+                    d["bhyt_effect_date"],
+                    d["bhyt_exp_effect_date"],
+                    d["ngay_hieu_luc_hop_dong"],
+                    d["goi_thau_bhyt"],
+                    d["phan_nhom_bhyt"],
+                    d["insurance_drug_material_id"],
+                    d["bhyt_loai_thuoc"],
+                    d["bhyt_loai_thau"],
+                    d["bhyt_nha_thau"],
+                    d["bhyt_nha_thau_bak"],
+                    d["bhyt_quyet_dinh"],
+                    d["bhyt_so_luong"],
+                    d["bhxh_id"],
+                    d["creator_id"],
+                    d["created_at"],
+                    d["modifier_id"],
+                    d["updated_at"],
+                    d["bhxh_pay_percent"],
+                    d["service_group_cost_code"],
+                    d["ma_thuoc_dqg"],
+                    d["khu_dieu_tri"],
+                    d["note"],
+                    d["dang_bao_che"],
+                    d["locked"],
+                    d["code_atc"],
+                    d["co_han_dung"],
+                    d["t_trantt"],
+                    d["bk_enum_item_type"],
+                    d["is_control"],
+                    d["nhom_thuoc"],
+                    d["nhom_duoc_ly"],
+                    d["phan_nhom_thuoc_id"],
+                    d["dst_price"],
+                    d["im_price"],
+                    d["is_special_dept"],
+                    d["thang_tuoi_chi_dinh"],
+                    d["max_one_times"],
+                    d["max_one_times_by_weight"],
+                    d["min_one_times_by_weight"],
+                    d["max_one_day"],
+                    d["max_one_day_by_weight"],
+                    d["min_one_day_by_weight"],
+                    d["thuoc_ra_le"],
+                    d["gia_temp"],
+                    d["is_inventory"],
+                    d["loai_thuan_hop"],
+                    d["khong_thanh_toan_rieng"],
+                    d["is_used_event"],
+                    d["bhyt_nha_thau_id"],
+                    d["bhyt_nha_thau_code"],
+                    d["so_luong_cho_nhap"],
+                    d["so_luong_da_nhan"],
+                    d["is_used_event_idm"],
+                    d["dose_quantity"],
+                    d["dose_unit"],
+                    d["thoi_gian_bao_quan"],
+                    d["ten_theo_thau"],
+                    d["prescription_item_id"],
+                    d["prescription_id"],
+                    d["medicine_id"],
+                    d["usage_title"],
+                    d["usage_num"],
+                    d["dosage"],
+                    d["time"],
+                    d["quantity_num"],
+                    d["confirm_sell_num"],
+                    d["quantity_title"],
+                    d["dosage_title"],
+                    d["morning"],
+                    d["noon"],
+                    d["afternoon"],
+                    d["evening"],
+                    d["paid"],
+                    d["is_bhyt"],
+                    d["bhyt_pay_percent"],
+                    d["is_bhbl"],
+                    d["bhbl_percent"],
+                    d["insurance_company_id"],
+                    d["bhbl_amount"],
+                    d["bhbl_must_buy_full"],
+                    d["status"],
+                    d["num_per_time"],
+                    d["is_deleted"],
+                    d["solan_ngay"],
+                    d["is_max_one_times"],
+                    d["is_max_one_times_by_weight"],
+                    d["is_max_one_day"],
+                    d["is_max_one_day_by_weight"],
+                    d["is_min_one_day_by_weight"],
+                    d["is_min_one_times_by_weight"],
+                    d["is_duply_original_name"],
+                    d["warning_note_doctor"],
+                    d["bhyt_store"],
+                    d["canh_bao_thang_tuoi_chi_dinh"],
+                    d["loai_ke_toa"],
+                    d["buoi_uong"],
+                    d["da_cap"],
+                    d["quantity_use"],
+                    d["quantity_remain"],
+                    d["ngay_dung_thuoc"],
+                    d["order_by"]
+                )
+                print(f"đội dài của drug_material_Data :{len(drug_material_data)}")
+                inserttest= "drug_material_id, ma_hoat_chat_ax, hoat_chat_ax, 
+                            ma_duong_dung_ax, duong_dung_ax, bhyt_so_dk_gpnk, bhyt_ham_luong, 
+                            code, code_insurance, enum_insurance_type, proprietary_name, 
+                            insurance_name, ten_thuongmai, drug_original_name_id, original_names, 
+                            default_usage_id, enum_usage, enum_unit_import_sell, unit_usage_id, 
+                            allow_auto_cal, num_of_day, max_usage, num_of_time, unit_volume_id, 
+                            volume_value, disable, enum_item_type, made_in, country_name, 
+                            include_children, insurance_support, cancer_drug, price, ham_luong, 
+                            dong_goi, tac_dung, chi_dinh, chong_chi_dinh, tac_dung_phu, lieu_luong, 
+                            poison_type_id, pharmacology_id, manufacturer_id, ten_hang_sx, 
+                            renumeration_price, so_dk_gpnk, price_bv, price_qd, latest_import_price_vat, 
+                            latest_import_price, is_bhyt_in_surgery, stt_tt, bv_ap_thau, stt_dmt, 
+                            bhyt_effect_date, bhyt_exp_effect_date, ngay_hieu_luc_hop_dong, 
+                            goi_thau_bhyt, phan_nhom_bhyt, insurance_drug_material_id, bhyt_loai_thuoc, 
+                            bhyt_loai_thau, bhyt_nha_thau, bhyt_nha_thau_bak, bhyt_quyet_dinh, 
+                            bhyt_so_luong, bhxh_id, creator_id, created_at, modifier_id, updated_at, 
+                            bhxh_pay_percent, service_group_cost_code, ma_thuoc_dqg, khu_dieu_tri, 
+                            note, dang_bao_che, locked, code_atc, co_han_dung, t_trantt, 
+                            bk_enum_item_type, is_control, nhom_thuoc, nhom_duoc_ly, phan_nhom_thuoc_id, 
+                            dst_price, im_price, is_special_dept, thang_tuoi_chi_dinh, max_one_times, 
+                            max_one_times_by_weight, min_one_times_by_weight, max_one_day, 
+                            max_one_day_by_weight, min_one_day_by_weight, thuoc_ra_le, gia_temp, 
+                            is_inventory, loai_thuan_hop, khong_thanh_toan_rieng, is_used_event, 
+                            bhyt_nha_thau_id, bhyt_nha_thau_code, so_luong_cho_nhap, so_luong_da_nhan, 
+                            is_used_event_idm, dose_quantity, dose_unit, thoi_gian_bao_quan, ten_theo_thau,
+                            prescription_item_id, prescription_id, medicine_id, usage_title, 
+                            usage_num, dosage, time, quantity_num, confirm_sell_num, 
+                            quantity_title, dosage_title, morning, noon, afternoon, evening, 
+                            paid, is_bhyt, bhyt_pay_percent, is_bhbl, bhbl_percent, 
+                            insurance_company_id, bhbl_amount, bhbl_must_buy_full, status, 
+                            num_per_time, is_deleted, solan_ngay, is_max_one_times, 
+                            is_max_one_times_by_weight, is_max_one_day, is_max_one_day_by_weight, 
+                            is_min_one_day_by_weight, is_min_one_times_by_weight, 
+                            is_duply_original_name, warning_note_doctor, bhyt_store, 
+                            canh_bao_thang_tuoi_chi_dinh, loai_ke_toa, buoi_uong, da_cap, 
+                            quantity_use, quantity_remain, ngay_dung_thuoc, order_by"
+                print(f"")
+                # Insert into drug_material_of_prescription
+                cur.execute("""
+                    INSERT INTO prescription_ver2 (
+                        drug_material_id, ma_hoat_chat_ax, hoat_chat_ax, 
+                        ma_duong_dung_ax, duong_dung_ax, bhyt_so_dk_gpnk, bhyt_ham_luong, 
+                        code, code_insurance, enum_insurance_type, proprietary_name, 
+                        insurance_name, ten_thuongmai, drug_original_name_id, original_names, 
+                        default_usage_id, enum_usage, enum_unit_import_sell, unit_usage_id, 
+                        allow_auto_cal, num_of_day, max_usage, num_of_time, unit_volume_id, 
+                        volume_value, disable, enum_item_type, made_in, country_name, 
+                        include_children, insurance_support, cancer_drug, price, ham_luong, 
+                        dong_goi, tac_dung, chi_dinh, chong_chi_dinh, tac_dung_phu, lieu_luong, 
+                        poison_type_id, pharmacology_id, manufacturer_id, ten_hang_sx, 
+                        renumeration_price, so_dk_gpnk, price_bv, price_qd, latest_import_price_vat, 
+                        latest_import_price, is_bhyt_in_surgery, stt_tt, bv_ap_thau, stt_dmt, 
+                        bhyt_effect_date, bhyt_exp_effect_date, ngay_hieu_luc_hop_dong, 
+                        goi_thau_bhyt, phan_nhom_bhyt, insurance_drug_material_id, bhyt_loai_thuoc, 
+                        bhyt_loai_thau, bhyt_nha_thau, bhyt_nha_thau_bak, bhyt_quyet_dinh, 
+                        bhyt_so_luong, bhxh_id, creator_id, created_at, modifier_id, updated_at, 
+                        bhxh_pay_percent, service_group_cost_code, ma_thuoc_dqg, khu_dieu_tri, 
+                        note, dang_bao_che, locked, code_atc, co_han_dung, t_trantt, 
+                        bk_enum_item_type, is_control, nhom_thuoc, nhom_duoc_ly, phan_nhom_thuoc_id, 
+                        dst_price, im_price, is_special_dept, thang_tuoi_chi_dinh, max_one_times, 
+                        max_one_times_by_weight, min_one_times_by_weight, max_one_day, 
+                        max_one_day_by_weight, min_one_day_by_weight, thuoc_ra_le, gia_temp, 
+                        is_inventory, loai_thuan_hop, khong_thanh_toan_rieng, is_used_event, 
+                        bhyt_nha_thau_id, bhyt_nha_thau_code, so_luong_cho_nhap, so_luong_da_nhan, 
+                        is_used_event_idm, dose_quantity, dose_unit, thoi_gian_bao_quan, ten_theo_thau,
+                        prescription_item_id, prescription_id, medicine_id, usage_title, 
+                        usage_num, dosage, time, quantity_num, confirm_sell_num, 
+                        quantity_title, dosage_title, morning, noon, afternoon, evening, 
+                        paid, is_bhyt, bhyt_pay_percent, is_bhbl, bhbl_percent, 
+                        insurance_company_id, bhbl_amount, bhbl_must_buy_full, status, 
+                        num_per_time, is_deleted, solan_ngay, is_max_one_times, 
+                        is_max_one_times_by_weight, is_max_one_day, is_max_one_day_by_weight, 
+                        is_min_one_day_by_weight, is_min_one_times_by_weight, 
+                        is_duply_original_name, warning_note_doctor, bhyt_store, 
+                        canh_bao_thang_tuoi_chi_dinh, loai_ke_toa, buoi_uong, da_cap, 
+                        quantity_use, quantity_remain, ngay_dung_thuoc, order_by
+                    ) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, drug_material_data)
+
+                conn.commit()
+
+            except Exception as e:
+                conn.rollback()  # Rollback if any exception occurs
+                print(f"An error occurred: {e}")
+
+    cur.close()
+    conn.close()
 
 #hàm lấy dự liệu lên từ database của bảng prescription
 def get_list_data_prescription(header):
@@ -100,7 +386,8 @@ def get_list_data_prescription(header):
                         try:
                             data = dataTT['data']
                             if len(data) > 0:
-                                print("vo ne")
+                                print("......BẮT ĐẦU GHI DATA VÔ NHA......")
+                                add_detail_prescription(data)
                                 #hamm them du lieu vao database postgresql
                         except Exception as e:
                             print(f"loi khi them du lieu vao database......")
@@ -119,6 +406,6 @@ def get_list_data_prescription(header):
                  cur.close()
                  conn.close()
 
-            
+run_script()
 # Gọi hàm để chạy truy vấn
 
