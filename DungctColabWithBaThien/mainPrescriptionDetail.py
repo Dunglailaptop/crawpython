@@ -176,7 +176,7 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
 
                     # Sử dụng sql.SQL để tránh SQL injection
                     insert_query = sql.SQL("""
-                        INSERT INTO prescription_ver2 (
+                        INSERT INTO prescription_ver4 (
                             drug_material_id, ma_hoat_chat_ax, hoat_chat_ax, 
                             ma_duong_dung_ax, duong_dung_ax, bhyt_so_dk_gpnk, bhyt_ham_luong, 
                             code, code_insurance, enum_insurance_type, proprietary_name, 
