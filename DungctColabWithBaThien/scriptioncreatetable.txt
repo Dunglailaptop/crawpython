@@ -1,4 +1,4 @@
-CREATE TABLE prescription_ver3 (
+CREATE TABLE prescription_detail (
     drug_material_id INTEGER,
     ma_hoat_chat_ax VARCHAR(1024),
     hoat_chat_ax VARCHAR(1024),
