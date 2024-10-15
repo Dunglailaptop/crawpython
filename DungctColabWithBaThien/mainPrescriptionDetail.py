@@ -269,7 +269,7 @@ def get_list_data_prescription(header):
                             print(f"loi khi them du lieu vao database......")
                     else:
                         print(f"loi khi lay du lieu chi tiet toa thuoc" + str(e))
-                p = page_value + 1
+                p = int(page_value) + 1
                 pSub = p - 1
                 rc = pSub * 20 - 1
                 update_file_json(l4_value=p, l6_value=rc)
