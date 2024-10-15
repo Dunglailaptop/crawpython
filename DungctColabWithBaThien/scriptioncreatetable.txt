@@ -1,4 +1,5 @@
-CREATE TABLE prescription_detail (
+CREATE TABLE prescription_details (
+    stt SERIAL PRIMARY KEY,
     drug_material_id INTEGER,
     ma_hoat_chat_ax VARCHAR(1024),
     hoat_chat_ax VARCHAR(1024),

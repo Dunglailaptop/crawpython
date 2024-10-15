@@ -103,7 +103,7 @@ def replace_nulls_with_string(data):
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def add_detail_prescription(datalist: List[Dict[str, Any]]):
-    conn_params = sour.DataGet  # Giả sử đây là một đối tượng chứa thông tin kết nối
+    conn_params = sour.ConnectStr  # Giả sử đây là một đối tượng chứa thông tin kết nối
     conn = None
     cur = None
 
@@ -176,7 +176,7 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
 
                     # Sử dụng sql.SQL để tránh SQL injection
                     insert_query = sql.SQL("""
-                        INSERT INTO prescription_ver4 (
+                        INSERT INTO prescription_details (
                             drug_material_id, ma_hoat_chat_ax, hoat_chat_ax, 
                             ma_duong_dung_ax, duong_dung_ax, bhyt_so_dk_gpnk, bhyt_ham_luong, 
                             code, code_insurance, enum_insurance_type, proprietary_name, 
