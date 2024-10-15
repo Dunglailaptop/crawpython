@@ -171,8 +171,8 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
                         d["quantity_remain"], d["ngay_dung_thuoc"], d["order_by"]
                     )
 
-                    logging.info(f"Đang xử lý bản ghi thứ {index}/{len(datalist)}")
-                    logging.debug(f"Số lượng trường dữ liệu: {len(drug_material_data)}")
+                    # logging.info(f"Đang xử lý bản ghi thứ {index}/{len(datalist)}")
+                    # logging.debug(f"Số lượng trường dữ liệu: {len(drug_material_data)}")
 
                     # Sử dụng sql.SQL để tránh SQL injection
                     insert_query = sql.SQL("""
@@ -275,6 +275,7 @@ def get_list_data_prescription(header):
                 update_file_json(l4_value=p, l6_value=rc)
                 page_value = p
                 record_value = rc
+                print(f"tổng page vlaue/record value:{page_value}/{record_value}")
         except Exception as e:
            print("Lỗi xảy ra trong quá trình truy cập CSDL... : "+ str(e))                  
         finally:
