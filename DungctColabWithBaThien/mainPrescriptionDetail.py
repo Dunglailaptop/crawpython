@@ -63,13 +63,13 @@ def run_script():
     app.deiconify()
 
 def load_config():
-    if os.path.exists('prescriptionDetail.json'):
-        with open('prescriptionDetail.json','r') as f:
+    if os.path.exists(sour.CONFIG_PATH):
+        with open(sour.CONFIG_PATH,'r') as f:
             return json.load(f)
     return {"page_value":"1","record_value":"0"}
 
 def save_config(config):
-    with open('prescriptionDetail.json', 'w') as f:
+    with open(sour.CONFIG_PATH, 'w') as f:
         json.dump(config, f)
 
 def update_file_json(l4_value, l6_value):

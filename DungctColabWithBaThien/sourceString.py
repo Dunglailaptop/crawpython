@@ -2,6 +2,10 @@ from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 import time
 import json
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(BASE_DIR, "source", "prescriptionDetail.json")
 
 Appkey = "55abbe84f48701bc8b3873c72c804bac7a70b3ed2_2942_webapp"
 ConnectStr = {
