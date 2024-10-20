@@ -7,7 +7,10 @@ import os
 import json
 import logging
 import requests
+import customtkinter
 from psycopg2 import sql
+from PIL import ImageTk, Image
+from tkinter import Menu
 from typing import List, Dict, Any
 
 app = sour.Any
@@ -283,6 +286,6 @@ def get_list_data_prescription(header):
                  cur.close()
                  conn.close()
 
-run_script()
+
 # Gọi hàm để chạy truy vấn
 
