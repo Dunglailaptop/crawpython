@@ -8,47 +8,56 @@ import json
 import logging
 import requests
 import customtkinter
+from tkinter import messagebox
 from psycopg2 import sql
 from PIL import ImageTk, Image
 from tkinter import Menu
 from typing import List, Dict, Any
 
 app = sour.Any
+terminal_window = Any
+terminal_text = Any
+def log_terminal(message):
+        global terminal_text
+        terminal_text.insert(tk.END,message + "\n")
+        terminal_text.see(tk.END)  # Scroll to the end
+        terminal_text.update_idletasks()
 #hàm chạy chính các sự kiện main
-def run_script():
-    global app
-    print("...........khởi động chương trình...........")
-    print("...........Khởi động chomre.................")
+def run_script(terminaltext):
+    global terminal_window, terminal_text
+    terminal_text = terminaltext
+    log_terminal("...........khởi động chương trình...........")
+    log_terminal("...........Khởi động chomre.................")
     bTry = False
     errorChrome = 1
     while bTry == False:
           bTry = sour._initSelenium_()
           if bTry == False:
              if errorChrome >= 10:
-                 print(".......khởi động chrome thất bại quá nhiều lần! tắt chương trình.......")
+                 log_terminal(".......khởi động chrome thất bại quá nhiều lần! tắt chương trình.......")
                  app.destroy()
              else:
                  errorChrome += 1
-                 print("....khởi động chomre thất bại thử lại lần nữa.......")
+                 log_terminal("....khởi động chomre thất bại thử lại lần nữa.......")
     time.sleep(3)
-    print("........Duyệt website thành công.........")
+    log_terminal("........Duyệt website thành công.........")
     sour._login_("quyen.ngoq", "74777477")
      # ấn nút login
     time.sleep(0.5)
-    print(".........................Sao chép userkey thành công.....................................")
+    log_terminal(".........................Sao chép userkey thành công.....................................")
     headers = {
                     "Appkey": sour.Appkey,
                     "Userkey": sour.secretKey,
                     "Authorization": sour.secretKey,
                     "Content-Type": sour.contentType
                 }
-    print(".........................Đang tiến hành thu thập! Vui lòng chờ...........................")
+    log_terminal(".........................Đang tiến hành thu thập! Vui lòng chờ...........................")
     loading = True
     def loading_animation():
         chars = "/—\\|"
         i = 0
         while loading:
-            print('\r' + 'Vui lòng đợi quá trình tải dữ liệu đang được diễn ra... ' + chars[i % len(chars)])
+            log_terminal('\r' + 'Vui lòng đợi quá trình tải dữ liệu đang được diễn ra... ' + chars[i % len(chars)])
             time.sleep(0.1)
             i += 1
       # Thread cho animation
@@ -58,11 +67,13 @@ def run_script():
     loading_thread.start()
     # Biến global để kiểm soát animation
     try:
-        get_list_data_prescription(headers)
+        get_list_data_prescription(headers) 
+        messagebox.showinfo(title="Thành công!",message="Hoàn thành cào dữ liệu bệnh nhân! Kết nối PostgreSQL đã đóng!.....")
     finally:
         loading = False
         loading_thread.join()
     sour._destroySelenium_()
+    terminal_window.destroy()
     app.deiconify()
 
 def load_config():
@@ -225,6 +236,7 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
                     cur.execute(insert_query, drug_material_data)
                     conn.commit()
                     logging.info(f"Bản ghi thứ {index} đã được chèn thành công")
+                    log_terminal(f"Bản ghi thứ {index} đã được chèn thành công")
 
                 except Exception as e:
                     conn.rollback()
@@ -265,7 +277,7 @@ def get_list_data_prescription(header):
                         try:
                             data = dataTT['data']
                             if len(data) > 0:
-                                print("......BẮT ĐẦU GHI DATA VÔ NHA......")
+                                log_terminal("......BẮT ĐẦU GHI DATA VÔ NHA......")
                                 add_detail_prescription(data)
                                 #hamm them du lieu vao database postgresql
                         except Exception as e:
@@ -278,7 +290,7 @@ def get_list_data_prescription(header):
                 update_file_json(l4_value=p, l6_value=rc)
                 page_value = p
                 record_value = rc
-                print(f"tổng page vlaue/record value:{page_value}/{record_value}")
+                log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
         except Exception as e:
            print("Lỗi xảy ra trong quá trình truy cập CSDL... : "+ str(e))                  
         finally:
@@ -286,6 +298,69 @@ def get_list_data_prescription(header):
                  cur.close()
                  conn.close()
 
+def open_terminal_window():
+    global terminal_window
+    terminal_window = tk.Toplevel(app)
+    terminal_window.title("Màn hình chạy dữ liệu")
+    # terminal_window.geometry("800x600")
+    terminal_window.attributes("-fullscreen", True)
+    icon_path = sour.CONFIG_PATH_ICON_APP
+    terminal_window.iconbitmap(icon_path)
+    terminal_text = tk.Text(terminal_window, bg="black", fg="green", insertbackground="green")
+    terminal_text.pack(expand=True, fill='both')
 
+    def on_closing():
+        if script_thread.is_alive():
+            terminal_window.destroy()
+            app.deiconify()
+        else:
+            terminal_window.destroy()
+            app.deiconify()
+
+    terminal_window.protocol("WM_DELETE_WINDOW", on_closing)
+    return terminal_window, terminal_text
+
+def center_window(window, width=600, height=440):
+    # Lấy kích thước màn hình
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    # Tính toán tọa độ x và y để cửa sổ ở giữa màn hình
+    x = (screen_width / 2) - (width / 2)
+    y = (screen_height / 2) - (height / 2)
+    window.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+    
+def settupAppBeginStart(main_app):
+    global app
+    app = customtkinter.CTkToplevel(main_app)
+    app.title("Lấy dữ liệu hành chính")
+    center_window(app)
+    icon_path = sour.CONFIG_PATH_ICON_APP
+    app.iconbitmap(icon_path)
+
+    def on_closing():
+        main_app.deiconify()  # Hiển thị lại cửa sổ chính khi đóng cửa sổ mới
+        app.destroy()
+
+    app.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    imgBG = ImageTk.PhotoImage(Image.open(sour.CONFIG_PATH_IMAGE_BACKGROUND_APP_2))
+    l1 = customtkinter.CTkLabel(master=app, image=imgBG)
+    l1.pack()
+
+    
+    frame = customtkinter.CTkFrame(master=l1, width=320, height=250, corner_radius=15)
+    frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+    
+    run_button = customtkinter.CTkButton(master=frame, command=start_script_thread,text="Thực thi", font=('Tahoma', 13), fg_color="#005369", hover_color="#008097")
+    run_button.place(x=160, y=200)
+    
+    app.mainloop()
+
+def start_script_thread():
+    global script_thread  # Khai báo biến toàn cục
+    terminal_window, terminal_text = open_terminal_window()
+    app.withdraw()
+    script_thread = threading.Thread(target=run_script, args=(terminal_text,))
+    script_thread.start()
 # Gọi hàm để chạy truy vấn
 

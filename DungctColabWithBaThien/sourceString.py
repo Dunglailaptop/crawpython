@@ -7,6 +7,12 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "source", "prescriptionDetail.json")
 
+
+CONFIG_PATH_ICON_APP = os.path.join(BASE_DIR, "source", "crawlLogo.ico")
+CONFIG_PATH_IMAGE_BACKGROUND_APP = os.path.join(BASE_DIR, "source", "BG.png")
+CONFIG_PATH_IMAGE_BACKGROUND_APP_2 = os.path.join(BASE_DIR, "source", "BG2.jpg")
+
+
 Appkey = "55abbe84f48701bc8b3873c72c804bac7a70b3ed2_2942_webapp"
 ConnectStr = {
         "host": "192.168.0.127",

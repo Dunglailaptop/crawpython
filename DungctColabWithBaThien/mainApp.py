@@ -1,13 +1,14 @@
 import customtkinter
 import os
 import tkinter as tk
+import sourceString as sour
 from tkinter import Menu
 from PIL import ImageTk, Image
 
 def open_prescriptionDetail():
-    # app.withdraw()
+    app.withdraw()
     import mainPrescriptionDetail as prescriptiondetail
-    prescriptiondetail.run_script()
+    prescriptiondetail.settupAppBeginStart(app)
 
 
 
@@ -23,7 +24,7 @@ def center_window(window,width=600,height=400):
 app = customtkinter.CTk()
 app.title("Lấy dữ liệu khám chưa bệnh")
 center_window(app)
-icon_path = os.path.abspath("crawpython\DungctColabWithBaThien\source\crawlLogo.ico")
+icon_path = sour.CONFIG_PATH_ICON_APP
 app.iconbitmap(icon_path)
 
 menu_bar = Menu(app)
@@ -33,7 +34,7 @@ prescription_menu = Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Lấy dữ liệu chi tiết đơn thuốc",menu=prescription_menu)
 prescription_menu.add_command(label="Thực thi dữ liệu chi tiết đơn thuốc",command=open_prescriptionDetail)
 
-imgBG = ImageTk.PhotoImage(Image.open("crawpython\DungctColabWithBaThien\source\BG.png"))
+imgBG = ImageTk.PhotoImage(Image.open(sour.CONFIG_PATH_IMAGE_BACKGROUND_APP))
 l1 = customtkinter.CTkLabel(master=app, image=imgBG)
 l1.pack()
 
