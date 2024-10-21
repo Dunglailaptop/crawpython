@@ -302,8 +302,8 @@ def open_terminal_window():
     global terminal_window
     terminal_window = tk.Toplevel(app)
     terminal_window.title("Màn hình chạy dữ liệu")
-    # terminal_window.geometry("800x600")
-    terminal_window.attributes("-fullscreen", True)
+    terminal_window.geometry("800x600")
+    # terminal_window.attributes("-fullscreen", True)
     icon_path = sour.CONFIG_PATH_ICON_APP
     terminal_window.iconbitmap(icon_path)
     terminal_text = tk.Text(terminal_window, bg="black", fg="green", insertbackground="green")
