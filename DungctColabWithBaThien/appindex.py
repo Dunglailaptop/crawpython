@@ -1,26 +1,6 @@
-import customtkinter
-import os
 import tkinter as tk
-import sourceString as sour
-from tkinter import Menu
-from PIL import ImageTk, Image
 from tkinter import ttk
 
-def open_prescriptionDetail(new_tab):
-    import mainPrescriptionDetail as prescriptiondetail
-    prescriptiondetail.settupAppBeginStart(new_tab)
-
-
-
-
-def center_window(window,width=600,height=400):
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    x=(screen_width / 2) - (width / 2)
-    y=(screen_height / 2 ) - (height / 2)
-    window.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
-
-# Function to create and manage tabs, ensuring each button can only create one tab
 # Function to create a tab with a close 'X' and embed a sub-application (frame)
 def create_tab_with_content(tab_name, content_type):
     if tab_name not in created_tabs:
@@ -35,16 +15,20 @@ def create_tab_with_content(tab_name, content_type):
         
         # Embed sub-application or content in the tab based on button clicked
         if content_type == "App1":
-            open_prescriptionDetail(new_tab)
+            # Simulate embedding an application window with widgets (e.g., a small app layout)
+            app_label = tk.Label(new_tab, text="This is the content of App 1", font=("Arial", 16))
+            app_label.pack(pady=20)
+            entry = tk.Entry(new_tab)
+            entry.pack(pady=10)
         elif content_type == "App2":
             # Another example of embedding different content in the tab
-            app_label = tk.Label(master=new_tab, text="This is the content of App 2", font=("Arial", 16))
+            app_label = tk.Label(new_tab, text="This is the content of App 2", font=("Arial", 16))
             app_label.pack(pady=20)
             button = tk.Button(new_tab, text="Click me")
             button.pack(pady=10)
         elif content_type == "App3":
             # Another different layout or content
-            app_label = tk.Label(master=new_tab, text="This is the content of App 3", font=("Arial", 16))
+            app_label = tk.Label(new_tab, text="This is the content of App 3", font=("Arial", 16))
             app_label.pack(pady=20)
             listbox = tk.Listbox(new_tab)
             for item in ["Option 1", "Option 2", "Option 3"]:
@@ -69,33 +53,35 @@ def close_tab(event):
         if tab_name in created_tabs:
             del created_tabs[tab_name]
 
-app = customtkinter.CTk()
-app.title("Lấy dữ liệu khám chưa bệnh")
-center_window(app)
-icon_path = sour.CONFIG_PATH_ICON_APP
-app.iconbitmap(icon_path)
-
-menu_bar = Menu(app)
-app.config(menu=menu_bar)
-
-prescription_menu = Menu(menu_bar, tearoff=0)
-menu_bar.add_cascade(label="Lấy dữ liệu chi tiết đơn thuốc",menu=prescription_menu)
-prescription_menu.add_command(label="Thực thi dữ liệu chi tiết đơn thuốc",command=lambda:  create_tab_with_content("Chi Tiết đơn thuốc", "App1"))
-prescription_menu.add_command(label="Thực thi dữ liệu khám bệnh ngoại trú",command=lambda:  create_tab_with_content("Khám Ngoại trú", "App2"))
-prescription_menu.add_command(label="Thực thi dữ liệu khám bệnh nội trú",command=lambda:  create_tab_with_content("Khám bệnh nội trú", "App3"))
+# Initialize the main application window
+app = tk.Tk()
+app.title("Tab with Embedded Window Example")
+app.geometry("600x500")  # Set fixed size for the main app window
 
 # Create a Notebook widget (tab container)
 notebook = ttk.Notebook(app)
 notebook.pack(expand=True, fill="both")
+
+# Dictionary to track created tabs
 created_tabs = {}
 
+# Create a frame to hold the buttons at the top
+button_frame = tk.Frame(app)
+button_frame.pack(side="top", pady=10)
+
+# Create buttons for adding tabs and embedding app windows
+buttons = {
+    "Tab 1": tk.Button(button_frame, text="Open Tab 1 with App1", command=lambda: create_tab_with_content("Tab 1", "App1")),
+    "Tab 2": tk.Button(button_frame, text="Open Tab 2 with App2", command=lambda: create_tab_with_content("Tab 2", "App2")),
+    "Tab 3": tk.Button(button_frame, text="Open Tab 3 with App3", command=lambda: create_tab_with_content("Tab 3", "App3"))
+}
+
+# Pack the buttons at the top
+for button in buttons.values():
+    button.pack(side="left", padx=5)
+
 # Bind the event to detect tab clicks and close tabs
-# notebook.bind("<Button-1>", close_tab)
+notebook.bind("<Button-1>", close_tab)
 
-def on_closing():
-    app.quit()
-
-app.protocol("WM_DELETE_WINDOW", on_closing)
+# Start the application
 app.mainloop()
-
-    

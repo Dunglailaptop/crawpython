@@ -17,6 +17,7 @@ from typing import List, Dict, Any
 app = sour.Any
 terminal_window = Any
 terminal_text = Any
+script_thread = Any
 def log_terminal(message):
         global terminal_text
         terminal_text.insert(tk.END,message + "\n")
@@ -298,69 +299,45 @@ def get_list_data_prescription(header):
                  cur.close()
                  conn.close()
 
-def open_terminal_window():
-    global terminal_window
-    terminal_window = tk.Toplevel(app)
-    terminal_window.title("Màn hình chạy dữ liệu")
-    terminal_window.geometry("800x600")
-    # terminal_window.attributes("-fullscreen", True)
-    icon_path = sour.CONFIG_PATH_ICON_APP
-    terminal_window.iconbitmap(icon_path)
+
+
+
+    
+# Function to open a terminal window embedded in the tab
+def open_terminal_window(new_tab):
+       # Clear any existing widgets in the tab
+    for widget in new_tab.winfo_children():
+        widget.destroy()
+    terminal_window = tk.Frame(new_tab)
+    terminal_window.pack(expand=True, fill="both")
+
     terminal_text = tk.Text(terminal_window, bg="black", fg="green", insertbackground="green")
-    terminal_text.pack(expand=True, fill='both')
-
-    def on_closing():
-        if script_thread.is_alive():
-            terminal_window.destroy()
-            app.deiconify()
-        else:
-            terminal_window.destroy()
-            app.deiconify()
-
-    terminal_window.protocol("WM_DELETE_WINDOW", on_closing)
+    terminal_text.pack(expand=True, fill="both")
+  
     return terminal_window, terminal_text
 
-def center_window(window, width=600, height=440):
-    # Lấy kích thước màn hình
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    # Tính toán tọa độ x và y để cửa sổ ở giữa màn hình
-    x = (screen_width / 2) - (width / 2)
-    y = (screen_height / 2) - (height / 2)
-    window.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
-    
-def settupAppBeginStart(main_app):
-    global app
-    app = customtkinter.CTkToplevel(main_app)
-    app.title("Lấy dữ liệu hành chính")
-    center_window(app)
-    icon_path = sour.CONFIG_PATH_ICON_APP
-    app.iconbitmap(icon_path)
-
-    def on_closing():
-        main_app.deiconify()  # Hiển thị lại cửa sổ chính khi đóng cửa sổ mới
-        app.destroy()
-
-    app.protocol("WM_DELETE_WINDOW", on_closing)
-    
-    imgBG = ImageTk.PhotoImage(Image.open(sour.CONFIG_PATH_IMAGE_BACKGROUND_APP_2))
-    l1 = customtkinter.CTkLabel(master=app, image=imgBG)
-    l1.pack()
-
-    
-    frame = customtkinter.CTkFrame(master=l1, width=320, height=250, corner_radius=15)
-    frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    
-    run_button = customtkinter.CTkButton(master=frame, command=start_script_thread,text="Thực thi", font=('Tahoma', 13), fg_color="#005369", hover_color="#008097")
-    run_button.place(x=160, y=200)
-    
-    app.mainloop()
-
-def start_script_thread():
-    global script_thread  # Khai báo biến toàn cục
-    terminal_window, terminal_text = open_terminal_window()
-    app.withdraw()
+# Function to start the script in a separate thread
+def start_script_thread(new_tab):
+    global script_thread
+    terminal_window, terminal_text = open_terminal_window(new_tab)
     script_thread = threading.Thread(target=run_script, args=(terminal_text,))
     script_thread.start()
+
+# Function to set up the main application in the tab
+def settupAppBeginStart(new_tab):
+    # Set up the application inside the tab
+    imgBG = ImageTk.PhotoImage(Image.open(sour.CONFIG_PATH_IMAGE_BACKGROUND_APP_2))  # Replace with your image path
+    l1 = customtkinter.CTkLabel(master=new_tab, image=imgBG)
+    l1.pack()
+
+    frame = customtkinter.CTkFrame(master=l1, width=320, height=250, corner_radius=15)
+    frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+    run_button = customtkinter.CTkButton(master=frame, command=lambda: start_script_thread(new_tab),
+                                         text="Thực thi", font=('Tahoma', 13), fg_color="#005369", hover_color="#008097")
+    run_button.place(x=160, y=200)
+
+    new_tab.mainloop()
+
 # Gọi hàm để chạy truy vấn
 
