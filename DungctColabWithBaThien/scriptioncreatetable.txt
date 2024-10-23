@@ -156,3 +156,146 @@ CREATE TABLE prescription_details (
     ngay_dung_thuoc INTEGER,
     order_by INTEGER
 );
+
+//LAY HOA DON KHAM NOI TRU
+CREATE TABLE invoice_of_patient (
+    stt int SERIAL PRIMARY KEY,
+    cashier_name VARCHAR(1024),                    -- "ĐD. BÙI THỊ HIỀN THƯƠNG"
+    amount DECIMAL(15, 2),                        -- 1280397.2
+    invoice_code VARCHAR(1024),                     -- "1RI411367"
+    discount_amount DECIMAL(15, 2),               -- 0
+    phai_thu DECIMAL(15, 2),                      -- 0
+    phai_tra DECIMAL(15, 2),                      -- 2594834
+    so_luu_tru VARCHAR(1024),                      -- ""
+    icd10 VARCHAR(1024),                            -- "J03;R10"
+    created_time  VARCHAR(1024),                       -- "2024-01-30T01:44:40.000Z"
+    returned INT,                            -- 0 (Use INT for boolean-like values)
+    note TEXT,                                    -- ""
+    print_notice_payment INT,                -- 1
+    bhbl_url TEXT,                                -- ""
+    enum_payment_type INT,                   -- 9
+    created  VARCHAR(1024),                            -- null
+    pay_receipt_id BIGINT,                        -- 243001304
+    enum_invoice_type INT,                   -- 1
+    pay_return DECIMAL(15, 2),                    -- 0
+    total_price DECIMAL(15, 2),                   -- 1280397.2
+    ins_paid_price DECIMAL(15, 2),                -- 875231.2
+    ticket_id BIGINT,                             -- null
+    patient_price DECIMAL(15, 2),                 -- 405166
+    new_invoice_code VARCHAR(1024),                 -- ""
+    refund_invoice_code VARCHAR(1024),              -- ""
+    enum_examination_type INT,               -- null
+    deleted INT,                             -- 0
+    so_hd VARCHAR(100),                           -- "00027758;2K24TND"
+    bhyt INT,                                -- 0
+    pay_payment_account_id BIGINT,                -- 233397264
+    patient_id BIGINT,                            -- 232053524
+    total_ser_price DECIMAL(15, 2),               -- 1280397.2
+    total_ins_price DECIMAL(15, 2),               -- 875231.2
+    total_ins_paid_price DECIMAL(15, 2),          -- 875231.2
+    real_ins_payment DECIMAL(15, 2),              -- 0
+    real_ser_payment DECIMAL(15, 2),              -- 0
+    enum_patient_type INT,                   -- 1
+    treatment_id BIGINT,                          -- 232051795
+    total_real_payment DECIMAL(15, 2),            -- 0
+    ins_percentage INT,                      -- 100
+    total_foresee DECIMAL(15, 2),                 -- 0
+    enum_account_type INT,                   -- 0
+    pay_payment_account_document_id BIGINT,       -- 0
+    surgery_type INT,                        -- 0
+    closed INT,                              -- 1
+    check_in_date  VARCHAR(1024),                      -- "2024-01-28T08:20:00.000Z"
+    check_out_date  VARCHAR(1024),                     -- "2024-01-30T01:39:00.000Z"
+    first_department_id BIGINT,                   -- 32
+    end_department_id BIGINT,                     -- 32
+    introduction_text TEXT,                       -- ""
+    introduction_phone VARCHAR(1024),               -- ""
+    icd10_id BIGINT,                              -- 3930
+    check_in_out_hospital_record_id BIGINT,       -- 232051795
+    allow_re_print_hos_con INT,              -- 0
+    first_department VARCHAR(1024),                -- "Tiêu Hóa"
+    end_department VARCHAR(1024)                   -- "Tiêu Hóa"
+);
+
+//LAY HOA DON KHAM NGOAI TRU
+CREATE TABLE Invoicesoutpatient_Detail (
+    stt SERIAL PRIMARY KEY,
+    total DECIMAL(15, 2),                          -- 71300
+    pay_payment_item_id BIGINT,                    -- 45407481
+    pay_receipt_id BIGINT,                         -- 24197405
+    patient_id BIGINT,                             -- 20
+    created_time VARCHAR(1024),                        -- "2023-01-06T01:02:41.000Z"
+    cashier_id BIGINT,                             -- 409
+    amount DECIMAL(15, 2),                         -- 71300
+    discount_amount DECIMAL(15, 2),                -- 0
+    discount_enum_unit  INT,                   -- 0
+    note TEXT,                                     -- ""
+    invoice_code VARCHAR(1024),                      -- "2T382333"
+    partner_invoice_code VARCHAR(1024),              -- null
+    cashier_name VARCHAR(1024),                     -- "MINH MAN"
+    enum_payment_type  INT,                    -- 1
+    pay_payment_account_id BIGINT,                 -- 124895159
+    enum_invoice_type  INT,                    -- 3
+    total_price DECIMAL(15, 2),                    -- 27400
+    ins_paid_price DECIMAL(15, 2),                 -- 0
+    patient_price DECIMAL(15, 2),                  -- 71300
+    branch_id BIGINT,                              -- 2
+    counter_id BIGINT,                             -- 0
+    enum_re_exam_type  INT,                    -- 1
+    total_returned_amount DECIMAL(15, 2),          -- 0
+    returned  INT,                             -- 0
+    new_pay_receipt_id BIGINT,                     -- 0
+    new_invoice_code VARCHAR(1024),                  -- ""
+    refund_invoice_code VARCHAR(1024),               -- ""
+    refund_pay_receipt_id BIGINT,                  -- 0
+    refund_date VARCHAR(1024),                         -- "0000-00-00 00:00:00"
+    bhbl_url TEXT,                                 -- ""
+    change_note TEXT,                              -- ""
+    deleted  INT,                              -- 0
+    audi_last_modified_user_id BIGINT,             -- 241
+    audi_last_modified_time VARCHAR(1024),             -- "2023-01-06T01:02:42.000Z"
+    refund_amount DECIMAL(15, 2),                  -- 0
+    so_luu_tru VARCHAR(1024),                        -- ""
+    phai_thu DECIMAL(15, 2),                       -- 0
+    phai_tra DECIMAL(15, 2),                       -- 0
+    da_thu VARCHAR(1024),                            -- "0001"
+    ngay_thu VARCHAR(1024),                            -- "2023-01-06T01:02:42.000Z"
+    nguoi_thu BIGINT,                              -- 241
+    is_ngoai_quy_ds  INT,                      -- 0
+    company_name VARCHAR(1024),                     -- ""
+    company_id BIGINT,                             -- 0
+    so_hd VARCHAR(1024),                             -- "00004992"
+    hd_date VARCHAR(1024),                                  -- "2023-01-06"
+    transfer_date VARCHAR(1024),                       -- "0000-00-00"
+    bank_transaction_log_id BIGINT,                -- 0
+    icd10 VARCHAR(1024),                             -- "0"
+    e_invoice_status  INT,                     -- 1
+    e_invoice_id BIGINT,                           -- 2163562
+    ins_send_status  INT,                      -- 0
+    ins_transaction_code VARCHAR(1024),              -- null
+    hd_info VARCHAR(1024),                           -- "2K23TND"
+    retail_patient_name VARCHAR(1024),              -- null
+    retail_patient_address VARCHAR(1024),           -- null
+    tam_ung DECIMAL(15, 2),                        -- 0
+    tochuc_quy DECIMAL(15, 2),                     -- 0
+    total_dichvu DECIMAL(15, 2),                   -- 0
+    total_nutrition DECIMAL(15, 2),                -- 0
+    percent_fee DECIMAL(5, 2),                     -- 0
+    zone VARCHAR(1024),                              -- "nd_lau3"
+    shift  INT,                                -- 1
+    is_inventory  INT,                         -- 0
+    reason_decline TEXT,                           -- ""
+    user_id_decline BIGINT,                        -- 0
+    time_decline VARCHAR(1024),                        -- "0000-00-00 00:00:00"
+    unit VARCHAR(1024),                              -- "Lần"
+    code VARCHAR(1024),                              -- "TNT"
+    unit_price DECIMAL(15, 2),                     -- 27400
+    quantity  INT,                             -- 1
+    insurance_name VARCHAR(1024),                   -- "Tổng phân tích nước tiểu (Bằng máy tự động)"
+    enum_item_type  INT,                       -- 1
+    service_name VARCHAR(1024),                     -- "Tổng phân tích nước tiểu (Bằng máy tự động)"
+    register_date VARCHAR(1024),                       -- "2023-01-06T00:59:30.000Z"
+    doctor_name VARCHAR(1024),                      -- "BS.CK1 Ngô Thị Ngãi"
+    item_type VARCHAR(1024),                         -- "laboratory"
+    service_id BIGINT                              -- 3108
+);

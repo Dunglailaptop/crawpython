@@ -10,6 +10,9 @@ def open_prescriptionDetail(new_tab):
     import mainPrescriptionDetail as prescriptiondetail
     prescriptiondetail.settupAppBeginStart(new_tab)
 
+def open_invoiceoutpatientDetail(new_tab):
+    import mainInvoiceoutpatientDetail as invoiceoutpatientDetail
+    invoiceoutpatientDetail.settupAppBeginStart(new_tab)
 
 
 
@@ -37,11 +40,7 @@ def create_tab_with_content(tab_name, content_type):
         if content_type == "App1":
             open_prescriptionDetail(new_tab)
         elif content_type == "App2":
-            # Another example of embedding different content in the tab
-            app_label = tk.Label(master=new_tab, text="This is the content of App 2", font=("Arial", 16))
-            app_label.pack(pady=20)
-            button = tk.Button(new_tab, text="Click me")
-            button.pack(pady=10)
+            open_invoiceoutpatientDetail(new_tab)
         elif content_type == "App3":
             # Another different layout or content
             app_label = tk.Label(master=new_tab, text="This is the content of App 3", font=("Arial", 16))

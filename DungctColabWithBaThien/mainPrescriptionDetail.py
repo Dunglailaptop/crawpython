@@ -27,6 +27,7 @@ def log_terminal(message):
 def run_script(terminaltext):
     global terminal_window, terminal_text
     terminal_text = terminaltext
+    log_terminal("...........chay con server 70...............")
     log_terminal("...........khởi động chương trình...........")
     log_terminal("...........Khởi động chomre.................")
     bTry = False
@@ -36,7 +37,8 @@ def run_script(terminaltext):
           if bTry == False:
              if errorChrome >= 10:
                  log_terminal(".......khởi động chrome thất bại quá nhiều lần! tắt chương trình.......")
-                 app.destroy()
+                 terminal_window.destroy()
+                #  app.destroy()
              else:
                  errorChrome += 1
                  log_terminal("....khởi động chomre thất bại thử lại lần nữa.......")
@@ -75,7 +77,7 @@ def run_script(terminaltext):
         loading_thread.join()
     sour._destroySelenium_()
     terminal_window.destroy()
-    app.deiconify()
+    # app.deiconify()
 
 def load_config():
     if os.path.exists(sour.CONFIG_PATH):
