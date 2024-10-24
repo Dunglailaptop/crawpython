@@ -161,11 +161,11 @@ CREATE TABLE prescription_details (
 CREATE TABLE invoice_of_patient (
     stt int SERIAL PRIMARY KEY,
     cashier_name VARCHAR(1024),                    -- "ĐD. BÙI THỊ HIỀN THƯƠNG"
-    amount DECIMAL(15, 2),                        -- 1280397.2
+    amount DECIMAL ,                        -- 1280397.2
     invoice_code VARCHAR(1024),                     -- "1RI411367"
-    discount_amount DECIMAL(15, 2),               -- 0
-    phai_thu DECIMAL(15, 2),                      -- 0
-    phai_tra DECIMAL(15, 2),                      -- 2594834
+    discount_amount DECIMAL ,               -- 0
+    phai_thu DECIMAL ,                      -- 0
+    phai_tra DECIMAL ,                      -- 2594834
     so_luu_tru VARCHAR(1024),                      -- ""
     icd10 VARCHAR(1024),                            -- "J03;R10"
     created_time  VARCHAR(1024),                       -- "2024-01-30T01:44:40.000Z"
@@ -177,11 +177,11 @@ CREATE TABLE invoice_of_patient (
     created  VARCHAR(1024),                            -- null
     pay_receipt_id BIGINT,                        -- 243001304
     enum_invoice_type INT,                   -- 1
-    pay_return DECIMAL(15, 2),                    -- 0
-    total_price DECIMAL(15, 2),                   -- 1280397.2
-    ins_paid_price DECIMAL(15, 2),                -- 875231.2
+    pay_return DECIMAL ,                    -- 0
+    total_price DECIMAL ,                   -- 1280397.2
+    ins_paid_price DECIMAL ,                -- 875231.2
     ticket_id BIGINT,                             -- null
-    patient_price DECIMAL(15, 2),                 -- 405166
+    patient_price DECIMAL ,                 -- 405166
     new_invoice_code VARCHAR(1024),                 -- ""
     refund_invoice_code VARCHAR(1024),              -- ""
     enum_examination_type INT,               -- null
@@ -190,16 +190,16 @@ CREATE TABLE invoice_of_patient (
     bhyt INT,                                -- 0
     pay_payment_account_id BIGINT,                -- 233397264
     patient_id BIGINT,                            -- 232053524
-    total_ser_price DECIMAL(15, 2),               -- 1280397.2
-    total_ins_price DECIMAL(15, 2),               -- 875231.2
-    total_ins_paid_price DECIMAL(15, 2),          -- 875231.2
-    real_ins_payment DECIMAL(15, 2),              -- 0
-    real_ser_payment DECIMAL(15, 2),              -- 0
+    total_ser_price DECIMAL ,               -- 1280397.2
+    total_ins_price DECIMAL ,               -- 875231.2
+    total_ins_paid_price DECIMAL ,          -- 875231.2
+    real_ins_payment DECIMAL ,              -- 0
+    real_ser_payment DECIMAL ,              -- 0
     enum_patient_type INT,                   -- 1
     treatment_id BIGINT,                          -- 232051795
-    total_real_payment DECIMAL(15, 2),            -- 0
+    total_real_payment DECIMAL ,            -- 0
     ins_percentage INT,                      -- 100
-    total_foresee DECIMAL(15, 2),                 -- 0
+    total_foresee DECIMAL ,                 -- 0
     enum_account_type INT,                   -- 0
     pay_payment_account_document_id BIGINT,       -- 0
     surgery_type INT,                        -- 0
@@ -218,16 +218,16 @@ CREATE TABLE invoice_of_patient (
 );
 
 //LAY HOA DON KHAM NGOAI TRU
-CREATE TABLE Invoicesoutpatient_Detail (
+CREATE TABLE InvoicesoutpatientDetail (
     stt SERIAL PRIMARY KEY,
-    total DECIMAL(15, 2),                          -- 71300
+    total DECIMAL ,                          -- 71300
     pay_payment_item_id BIGINT,                    -- 45407481
     pay_receipt_id BIGINT,                         -- 24197405
     patient_id BIGINT,                             -- 20
     created_time VARCHAR(1024),                        -- "2023-01-06T01:02:41.000Z"
     cashier_id BIGINT,                             -- 409
-    amount DECIMAL(15, 2),                         -- 71300
-    discount_amount DECIMAL(15, 2),                -- 0
+    amount DECIMAL ,                         -- 71300
+    discount_amount DECIMAL ,                -- 0
     discount_enum_unit  INT,                   -- 0
     note TEXT,                                     -- ""
     invoice_code VARCHAR(1024),                      -- "2T382333"
@@ -236,13 +236,13 @@ CREATE TABLE Invoicesoutpatient_Detail (
     enum_payment_type  INT,                    -- 1
     pay_payment_account_id BIGINT,                 -- 124895159
     enum_invoice_type  INT,                    -- 3
-    total_price DECIMAL(15, 2),                    -- 27400
-    ins_paid_price DECIMAL(15, 2),                 -- 0
-    patient_price DECIMAL(15, 2),                  -- 71300
+    total_price DECIMAL ,                    -- 27400
+    ins_paid_price DECIMAL ,                 -- 0
+    patient_price DECIMAL ,                  -- 71300
     branch_id BIGINT,                              -- 2
     counter_id BIGINT,                             -- 0
     enum_re_exam_type  INT,                    -- 1
-    total_returned_amount DECIMAL(15, 2),          -- 0
+    total_returned_amount DECIMAL ,          -- 0
     returned  INT,                             -- 0
     new_pay_receipt_id BIGINT,                     -- 0
     new_invoice_code VARCHAR(1024),                  -- ""
@@ -254,10 +254,10 @@ CREATE TABLE Invoicesoutpatient_Detail (
     deleted  INT,                              -- 0
     audi_last_modified_user_id BIGINT,             -- 241
     audi_last_modified_time VARCHAR(1024),             -- "2023-01-06T01:02:42.000Z"
-    refund_amount DECIMAL(15, 2),                  -- 0
+    refund_amount DECIMAL ,                  -- 0
     so_luu_tru VARCHAR(1024),                        -- ""
-    phai_thu DECIMAL(15, 2),                       -- 0
-    phai_tra DECIMAL(15, 2),                       -- 0
+    phai_thu DECIMAL ,                       -- 0
+    phai_tra DECIMAL ,                       -- 0
     da_thu VARCHAR(1024),                            -- "0001"
     ngay_thu VARCHAR(1024),                            -- "2023-01-06T01:02:42.000Z"
     nguoi_thu BIGINT,                              -- 241
@@ -276,10 +276,10 @@ CREATE TABLE Invoicesoutpatient_Detail (
     hd_info VARCHAR(1024),                           -- "2K23TND"
     retail_patient_name VARCHAR(1024),              -- null
     retail_patient_address VARCHAR(1024),           -- null
-    tam_ung DECIMAL(15, 2),                        -- 0
-    tochuc_quy DECIMAL(15, 2),                     -- 0
-    total_dichvu DECIMAL(15, 2),                   -- 0
-    total_nutrition DECIMAL(15, 2),                -- 0
+    tam_ung DECIMAL ,                        -- 0
+    tochuc_quy DECIMAL ,                     -- 0
+    total_dichvu DECIMAL ,                   -- 0
+    total_nutrition DECIMAL ,                -- 0
     percent_fee DECIMAL(5, 2),                     -- 0
     zone VARCHAR(1024),                              -- "nd_lau3"
     shift  INT,                                -- 1
@@ -289,7 +289,7 @@ CREATE TABLE Invoicesoutpatient_Detail (
     time_decline VARCHAR(1024),                        -- "0000-00-00 00:00:00"
     unit VARCHAR(1024),                              -- "Lần"
     code VARCHAR(1024),                              -- "TNT"
-    unit_price DECIMAL(15, 2),                     -- 27400
+    unit_price DECIMAL ,                     -- 27400
     quantity  INT,                             -- 1
     insurance_name VARCHAR(1024),                   -- "Tổng phân tích nước tiểu (Bằng máy tự động)"
     enum_item_type  INT,                       -- 1

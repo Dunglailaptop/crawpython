@@ -1,17 +1,25 @@
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
+from rx.subject import BehaviorSubject
+import rx
 import time
 import json
 import os
+import threading
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "source", "prescriptionDetail.json")
 
 
 CONFIG_PATH_ICON_APP = os.path.join(BASE_DIR, "source", "crawlLogo.ico")
-CONFIG_PATH_IMAGE_BACKGROUND_APP = os.path.join(BASE_DIR, "source", "BG.png")
+CONFIG_PATH_IMAGE_BACKGROUND_APP = os.path.join(BASE_DIR, "source", "crawldata.png")
+CONFIG_PATH_IMAGE_BACKGROUND_APP_3 = os.path.join(BASE_DIR, "source", "BG.png")
 CONFIG_PATH_IMAGE_BACKGROUND_APP_2 = os.path.join(BASE_DIR, "source", "BG2.jpg")
 CONFIG_PATH_INVOICEOUTPATIENTDETAIL = os.path.join(BASE_DIR, "source", "invoiceoutpatientdetail.json")
+
+terminal_destroy = any
+
+
 
 Appkey = "55abbe84f48701bc8b3873c72c804bac7a70b3ed2_2942_webapp"
 Appkey2 = "55abbe84f48701bc8b3873c72c804bac7a70b3ed2_2942_webapp"
@@ -162,3 +170,21 @@ def _initSelenium_2():
 def _destroySelenium_2():
     global driverGlobal2
     driverGlobal2.close()
+    
+    
+# HÀM DỪNG VÒNG LẶP
+new_tab = any
+stop_event = threading.Event()
+
+def stop_script():
+    stop_event.set()
+
+def is_stopped():
+    return stop_event.is_set()
+
+# Tạo một BehaviorSubject để lưu trữ giá trị checkvalue và truyền đi
+checkvalue_subject = BehaviorSubject(False)
+
+def update_checkvalue(new_value):
+    # Cập nhật giá trị vào stream
+    checkvalue_subject.on_next(new_value)

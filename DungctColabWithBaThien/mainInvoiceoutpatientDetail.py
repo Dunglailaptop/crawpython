@@ -26,6 +26,7 @@ def log_terminal(message):
 #hàm chạy chính các sự kiện main
 def run_script(terminaltext):
     global terminal_window, terminal_text
+    sour.terminal_destroy = terminal_window
     terminal_text = terminaltext
     log_terminal("...........chay con server 80...............")
     log_terminal("...........khởi động chương trình...........")
@@ -115,7 +116,7 @@ def replace_nulls_with_string(data):
         return tuple("None" if v is None else v for v in data)
     return data
 
-    
+
 # Thiết lập logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -162,7 +163,7 @@ def add_detail_invoice(datalist: List[Dict[str, Any]]):
 
                     # Sử dụng sql.SQL để tránh SQL injection
                     insert_query = sql.SQL("""
-                        INSERT INTO Invoicesoutpatient_Detail_ver2 (
+                        INSERT INTO InvoicesoutpatientDetail (
                             total, pay_payment_item_id, pay_receipt_id, patient_id,
                             created_time, cashier_id, amount, discount_amount,
                             discount_enum_unit, note, invoice_code, partner_invoice_code,
@@ -205,6 +206,19 @@ def add_detail_invoice(datalist: List[Dict[str, Any]]):
             conn.close()
         logging.info("Kết nối database đã đóng")
 
+#rx
+checkvalue = False
+def check_value_update(new_value):
+    global checkvalue
+    print(f"Giá trị checkvalue vừa được cập nhật: {new_value}")
+    if new_value:
+        print("Thực hiện hành động khi checkvalue là True.")
+        checkvalue = new_value
+       
+
+# Đăng ký (subscribe) vào stream để theo dõi thay đổi của checkvalue
+sour.checkvalue_subject.subscribe(check_value_update)
+
 #hàm lấy dự liệu lên từ database của bảng prescription
 def get_list_data_prescription(header):
     config = load_config()
@@ -220,6 +234,8 @@ def get_list_data_prescription(header):
             listdata = cur.fetchall()
             if len(listdata) > 0 :
                 for item in listdata:
+                    if checkvalue:
+                        break
                     invoice_code = item[13]
                     pay_receipt_id = item[19]
                     patien_id = item[29]
@@ -241,13 +257,16 @@ def get_list_data_prescription(header):
                             print(f"loi khi them du lieu vao database......")
                     else:
                         print(f"loi khi lay du lieu chi tiet toa thuoc" + str(e))
-                p = int(page_value) + 1
-                pSub = p - 1
-                rc = pSub * 20 - 1
-                update_file_json(l4_value=p, l6_value=rc)
-                page_value = p
-                record_value = rc
-                log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+                if not sour.is_stopped():
+                    p = int(page_value) + 1
+                    pSub = p - 1
+                    rc = pSub * 20 - 1
+                    update_file_json(l4_value=p, l6_value=rc)
+                    page_value = p
+                    record_value = rc
+                    log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+            else:
+                break
         except Exception as e:
            print("Lỗi xảy ra trong quá trình truy cập CSDL... : "+ str(e))                  
         finally:
@@ -269,7 +288,7 @@ def open_terminal_window(new_tab):
 
     terminal_text = tk.Text(terminal_window, bg="black", fg="green", insertbackground="green")
     terminal_text.pack(expand=True, fill="both")
-  
+    sour.new_tab = new_tab
     return terminal_window, terminal_text
 
 # Function to start the script in a separate thread
@@ -282,7 +301,7 @@ def start_script_thread(new_tab):
 # Function to set up the main application in the tab
 def settupAppBeginStart(new_tab):
     # Set up the application inside the tab
-    imgBG = ImageTk.PhotoImage(Image.open(sour.CONFIG_PATH_IMAGE_BACKGROUND_APP_2))  # Replace with your image path
+    imgBG = ImageTk.PhotoImage(Image.open(sour.CONFIG_PATH_IMAGE_BACKGROUND_APP_3))  # Replace with your image path
     l1 = customtkinter.CTkLabel(master=new_tab, image=imgBG)
     l1.pack()
 
