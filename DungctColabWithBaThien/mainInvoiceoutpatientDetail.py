@@ -72,12 +72,15 @@ def run_script(terminaltext):
     # Biến global để kiểm soát animation
     try:
         get_list_data_prescription(headers) 
-        messagebox.showinfo(title="Thành công!",message="Hoàn thành cào dữ liệu bệnh nhân! Kết nối PostgreSQL đã đóng!.....")
+        if checkvalue:
+           print("xong")
+        else:
+           messagebox.showinfo(title="Thành công!",message="Hoàn thành cào dữ liệu bệnh nhân! Kết nối PostgreSQL đã đóng!.....")
     finally:
         loading = False
         loading_thread.join()
-    sour._destroySelenium_2()
-    terminal_window.destroy()
+    # sour._destroySelenium_2()
+    # terminal_window.destroy()
     # app.deiconify()
 
 def load_config():
@@ -211,9 +214,7 @@ checkvalue = False
 def check_value_update(new_value):
     global checkvalue
     print(f"Giá trị checkvalue vừa được cập nhật: {new_value}")
-    if new_value:
-        print("Thực hiện hành động khi checkvalue là True.")
-        checkvalue = new_value
+    checkvalue = new_value
        
 
 # Đăng ký (subscribe) vào stream để theo dõi thay đổi của checkvalue
@@ -225,6 +226,8 @@ def get_list_data_prescription(header):
     page_value =config["page_value"]
     record_value = config["record_value"]
     while(True):
+        if checkvalue:
+            break
         try:
             conn_params = sour.ConnectStr
             conn = psycopg2.connect(**conn_params)
@@ -234,8 +237,6 @@ def get_list_data_prescription(header):
             listdata = cur.fetchall()
             if len(listdata) > 0 :
                 for item in listdata:
-                    if checkvalue:
-                        break
                     invoice_code = item[13]
                     pay_receipt_id = item[19]
                     patien_id = item[29]
@@ -257,14 +258,13 @@ def get_list_data_prescription(header):
                             print(f"loi khi them du lieu vao database......")
                     else:
                         print(f"loi khi lay du lieu chi tiet toa thuoc" + str(e))
-                if not sour.is_stopped():
-                    p = int(page_value) + 1
-                    pSub = p - 1
-                    rc = pSub * 20 - 1
-                    update_file_json(l4_value=p, l6_value=rc)
-                    page_value = p
-                    record_value = rc
-                    log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+                p = int(page_value) + 1
+                pSub = p - 1
+                rc = pSub * 20 - 1
+                update_file_json(l4_value=p, l6_value=rc)
+                page_value = p
+                record_value = rc
+                log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
             else:
                 break
         except Exception as e:
