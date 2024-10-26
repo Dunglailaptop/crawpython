@@ -73,13 +73,13 @@ def run_script(terminaltext):
     try:
         get_list_data_prescription(headers) 
         if checkvalue:
-           print("xong")
+           print("đóng kết nối chi tiết hóa đơn khám ngoại trú")
         else:
            messagebox.showinfo(title="Thành công!",message="Hoàn thành cào dữ liệu bệnh nhân! Kết nối PostgreSQL đã đóng!.....")
     finally:
         loading = False
         loading_thread.join()
-    # sour._destroySelenium_2()
+    sour._destroySelenium_2()
     # terminal_window.destroy()
     # app.deiconify()
 
@@ -124,7 +124,7 @@ def replace_nulls_with_string(data):
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def add_detail_invoice(datalist: List[Dict[str, Any]]):
-    conn_params = sour.DataGet
+    conn_params = sour.ConnectStr
     conn = None
     cur = None
 
@@ -218,7 +218,7 @@ def check_value_update(new_value):
        
 
 # Đăng ký (subscribe) vào stream để theo dõi thay đổi của checkvalue
-sour.checkvalue_subject.subscribe(check_value_update)
+sour.checkvalue_subject_invoicepatientdetail.subscribe(check_value_update)
 
 #hàm lấy dự liệu lên từ database của bảng prescription
 def get_list_data_prescription(header):
@@ -288,7 +288,7 @@ def open_terminal_window(new_tab):
 
     terminal_text = tk.Text(terminal_window, bg="black", fg="green", insertbackground="green")
     terminal_text.pack(expand=True, fill="both")
-    sour.new_tab = new_tab
+    
     return terminal_window, terminal_text
 
 # Function to start the script in a separate thread

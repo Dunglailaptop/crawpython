@@ -173,18 +173,21 @@ def _destroySelenium_2():
     
     
 # HÀM DỪNG VÒNG LẶP
-new_tab = any
-stop_event = threading.Event()
+# new_tab = any
+# stop_event = threading.Event()
 
-def stop_script():
-    stop_event.set()
+# def stop_script():
+#     stop_event.set()
 
-def is_stopped():
-    return stop_event.is_set()
+# def is_stopped():
+#     return stop_event.is_set()
 
 # Tạo một BehaviorSubject để lưu trữ giá trị checkvalue và truyền đi
-checkvalue_subject = BehaviorSubject(False)
-
-def update_checkvalue(new_value):
+checkvalue_subject_presriptiondetail = BehaviorSubject(False)
+checkvalue_subject_invoicepatientdetail = BehaviorSubject(False)
+def update_checkvalue_invoicepatientdetail(new_value):
     # Cập nhật giá trị vào stream
-    checkvalue_subject.on_next(new_value)
+    checkvalue_subject_invoicepatientdetail.on_next(new_value)
+def update_checkvalue_prescription(new_value):
+    # Cập nhật giá trị vào stream
+    checkvalue_subject_presriptiondetail.on_next(new_value)

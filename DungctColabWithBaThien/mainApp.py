@@ -39,10 +39,9 @@ def create_tab_with_content(tab_name, content_type):
                 # Đóng tab
                 notebook.forget(index)
                 if content_type == "App2":
-                    # sour.terminal_destroy.destroy()
-                    sour._destroySelenium_2()
-                    # sour.stop_script()
-                    sour.update_checkvalue(True)
+                    sour.update_checkvalue_invoicepatientdetail(True)
+                elif content_type == "App1": 
+                    sour.update_checkvalue_prescription(True)
                 del created_tabs[tab_name]
                 return
     else:
@@ -57,9 +56,10 @@ def create_tab_with_content(tab_name, content_type):
        
         # Thêm nội dung vào tab
         if content_type == "App1":
+            sour.update_checkvalue_prescription(False)
             open_prescriptionDetail(new_tab)
         elif content_type == "App2":
-            sour.update_checkvalue(False)
+            sour.update_checkvalue_invoicepatientdetail(False)
             open_invoiceoutpatientDetail(new_tab)
         elif content_type == "App3":
             # Another different layout or content

@@ -71,12 +71,15 @@ def run_script(terminaltext):
     # Biến global để kiểm soát animation
     try:
         get_list_data_prescription(headers) 
-        messagebox.showinfo(title="Thành công!",message="Hoàn thành cào dữ liệu bệnh nhân! Kết nối PostgreSQL đã đóng!.....")
+        if checkvalue:
+            print("đóng kết nói chi tiết toa thuốc")
+        else:
+            messagebox.showinfo(title="Thành công!",message="Hoàn thành cào dữ liệu bệnh nhân! Kết nối PostgreSQL đã đóng!.....")
     finally:
         loading = False
         loading_thread.join()
     sour._destroySelenium_()
-    terminal_window.destroy()
+    
     # app.deiconify()
 
 def load_config():
@@ -255,12 +258,25 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
             conn.close()
         logging.info("Kết nối database đã đóng")
 
+#hàm gọi sự kiện rx 
+checkvalue = False
+def check_value_update(new_value):
+    global checkvalue
+    print(f"Giá trị checkvalue vừa được cập nhật: {new_value}")
+    checkvalue = new_value
+       
+
+# Đăng ký (subscribe) vào stream để theo dõi thay đổi của checkvalue
+sour.checkvalue_subject_presriptiondetail.subscribe(check_value_update)
+
 #hàm lấy dự liệu lên từ database của bảng prescription
 def get_list_data_prescription(header):
     config = load_config()
     page_value =config["page_value"]
     record_value = config["record_value"]
     while(True):
+        if checkvalue:
+            break
         try:
             conn_params = sour.ConnectStr
             conn = psycopg2.connect(**conn_params)
@@ -294,6 +310,8 @@ def get_list_data_prescription(header):
                 page_value = p
                 record_value = rc
                 log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+            else:
+                break
         except Exception as e:
            print("Lỗi xảy ra trong quá trình truy cập CSDL... : "+ str(e))                  
         finally:
