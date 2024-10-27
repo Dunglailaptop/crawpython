@@ -274,6 +274,7 @@ def get_list_data_prescription(header):
     config = load_config()
     page_value =config["page_value"]
     record_value = config["record_value"]
+    checkstatusfail = False
     while(True):
         if checkvalue:
             break
@@ -291,8 +292,10 @@ def get_list_data_prescription(header):
                          "prescription_id": prescription_id
                     }
                     responseChiTietToaThuoc = requests.get(sour.urlGetPrescriptiondetail, headers=header,json=payload)
-                    if responseChiTietToaThuoc.status_code == 200:
-                        dataTT = responseChiTietToaThuoc.json()
+                    dataTT = responseChiTietToaThuoc.json()
+                    Errors = dataTT["error"]
+                    checkApi = Errors["code"]
+                    if responseChiTietToaThuoc.status_code == 200 and int(checkApi) == 200:
                         try:
                             data = dataTT['data']
                             if len(data) > 0:
@@ -303,13 +306,15 @@ def get_list_data_prescription(header):
                             print(f"loi khi them du lieu vao database......")
                     else:
                         print(f"loi khi lay du lieu chi tiet toa thuoc" + str(e))
-                p = int(page_value) + 1
-                pSub = p - 1
-                rc = pSub * 20 - 1
-                update_file_json(l4_value=p, l6_value=rc)
-                page_value = p
-                record_value = rc
-                log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+                        checkstatusfail = True
+                if not checkstatusfail:
+                    p = int(page_value) + 1
+                    pSub = p - 1
+                    rc = pSub * 20 - 1
+                    update_file_json(l4_value=p, l6_value=rc)
+                    page_value = p
+                    record_value = rc
+                    log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
             else:
                 break
         except Exception as e:
