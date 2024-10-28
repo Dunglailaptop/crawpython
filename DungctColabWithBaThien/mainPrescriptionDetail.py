@@ -258,6 +258,23 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
             conn.close()
         logging.info("Kết nối database đã đóng")
 
+#hàm check kiem tra sự tồn tại
+def check_Count_value(prescriptionid):
+    try:
+        prescription_id = int(prescriptionid)
+        con_params = sour.ConnectStr
+        conn = psycopg2.connect(**con_params)
+        cur = conn.cursor()
+        queyStr = f"select count(*) from prescription_details where prescription_id = {prescription_id};"
+        cur.execute(queyStr)
+        countPrescription = cur.fetchone()[0]
+        return int(countPrescription)
+    except Exception as e:
+        print("lỗi sảy ra trong quá trình lấy số lượng của prescriptiondetail" + str(e))
+    finally:
+        if conn:
+            cur.close()
+            conn.close()    
 #hàm gọi sự kiện rx 
 checkvalue = False
 def check_value_update(new_value):
@@ -298,9 +315,12 @@ def get_list_data_prescription(header):
                     if responseChiTietToaThuoc.status_code == 200 and int(checkApi) == 200:
                         try:
                             data = dataTT['data']
-                            if len(data) > 0:
-                                log_terminal("......BẮT ĐẦU GHI DATA VÔ NHA......")
-                                add_detail_prescription(data)
+                            if len(data) > 0 and check_Count_value(prescription_id) == 0:
+                                print("TỚI KHOẢN NÀY CHO DỪNG LẠI GHI NHẬN LÊN GITHUB")
+                                sour.update_checkvalue_prescription(True)
+                                checkstatusfail = True
+                                # log_terminal("......BẮT ĐẦU GHI DATA VÔ NHA......")
+                                # add_detail_prescription(data)
                                 #hamm them du lieu vao database postgresql
                         except Exception as e:
                             print(f"loi khi them du lieu vao database......")
@@ -315,6 +335,7 @@ def get_list_data_prescription(header):
                     page_value = p
                     record_value = rc
                     log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+                    checkstatusfail = False
             else:
                 break
         except Exception as e:

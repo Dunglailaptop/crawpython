@@ -270,6 +270,7 @@ def get_list_data_prescription(header):
                     page_value = p
                     record_value = rc
                     log_terminal(f"tổng page vlaue/record value:{page_value}/{record_value}")
+                    checkstatusfail = False
             else:
                 break
         except Exception as e:
