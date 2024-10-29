@@ -259,13 +259,14 @@ def add_detail_prescription(datalist: List[Dict[str, Any]]):
         logging.info("Kết nối database đã đóng")
 
 #hàm check kiem tra sự tồn tại
-def check_Count_value(prescriptionid):
+def check_Count_value(prescriptionid,numberdataget):
     try:
         prescription_id = int(prescriptionid)
         con_params = sour.ConnectStr
         conn = psycopg2.connect(**con_params)
         cur = conn.cursor()
-        queyStr = f"select count(*) from prescription_details where prescription_id = {prescription_id};"
+        queyStr = f"SELECT CASE WHEN COUNT(*) >= {numberdataget} THEN 1 ELSE 0 END as is_enough FROM prescription_details WHERE prescription_id = {prescription_id};"
+        # queyStr = f"select count(*) from prescription_details where prescription_id = {prescription_id};"
         cur.execute(queyStr)
         countPrescription = cur.fetchone()[0]
         return int(countPrescription)
@@ -315,7 +316,8 @@ def get_list_data_prescription(header):
                     if responseChiTietToaThuoc.status_code == 200 and int(checkApi) == 200:
                         try:
                             data = dataTT['data']
-                            if len(data) > 0 and check_Count_value(prescription_id) == 0:
+                            numbergetdata = len(data)
+                            if len(data) > 0 and check_Count_value(prescription_id,numbergetdata) == 0:
                                 print("TỚI KHOẢN NÀY CHO DỪNG LẠI GHI NHẬN LÊN GITHUB")
                                 sour.update_checkvalue_prescription(True)
                                 checkstatusfail = True
