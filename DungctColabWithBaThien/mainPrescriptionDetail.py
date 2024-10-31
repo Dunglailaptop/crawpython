@@ -317,12 +317,9 @@ def get_list_data_prescription(header):
                         try:
                             data = dataTT['data']
                             numbergetdata = len(data)
-                            if len(data) > 0 and check_Count_value(prescription_id,numbergetdata) == 0:
-                                print("TỚI KHOẢN NÀY CHO DỪNG LẠI GHI NHẬN LÊN GITHUB")
-                                sour.update_checkvalue_prescription(True)
-                                checkstatusfail = True
-                                # log_terminal("......BẮT ĐẦU GHI DATA VÔ NHA......")
-                                # add_detail_prescription(data)
+                            if len(data) > 0:
+                                log_terminal("......BẮT ĐẦU GHI DATA VÔ NHA......")
+                                add_detail_prescription(data)
                                 #hamm them du lieu vao database postgresql
                         except Exception as e:
                             print(f"loi khi them du lieu vao database......")
